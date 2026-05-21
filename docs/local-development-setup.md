@@ -181,6 +181,19 @@ npm run typecheck --workspace=mobile
 npm run test:parity --workspace=mobile
 ```
 
+## Manual TestFlight Build
+
+The EAS workflow is manual so we do not spend iOS build quota on every push.
+Commit and push release-ready changes first, then trigger the workflow from
+`mobile/`:
+
+```bash
+npx eas-cli workflow:run .eas/workflows/ios-testflight.yml
+```
+
+This uploads the current mobile project to EAS, runs mobile validation, builds
+iOS with the `production` profile, and submits the build to TestFlight.
+
 ## Common Local Ports
 
 - Web UI: `3000`
