@@ -1,13 +1,13 @@
 # Deployment and iOS TestFlight Guide
 
-This guide captures what needs to be in place to push the current local work, keep the web/API deployments healthy, and add an iOS TestFlight pipeline through GitHub Actions.
+This guide captures what needs to be in place to push the current local work, keep the web/API deployments healthy, and ship iOS TestFlight builds through Expo/EAS.
 
 ## Current Deployment Shape
 
 - `ui/` deploys to Vercel.
 - `api/` deploys to Railway.
 - Supabase migrations deploy from `.github/workflows/supabase-migrate.yml`.
-- `mobile/` is an Expo React Native app with an iOS bundle id of `com.infinityfinances.mobile`.
+- `mobile/` is an Expo React Native app with an iOS bundle id of `com.infinitefinances.app`.
 - The iOS project currently has Apple team id `T6GYVDW7V2` in `mobile/ios/InfinityFinances.xcodeproj/project.pbxproj`.
 
 ## Before Pushing
@@ -20,10 +20,9 @@ This guide captures what needs to be in place to push the current local work, ke
    - `mobile/ios/Pods/`
    - `mobile/.expo/`
    - local `.env` files
-3. Fix dependency reproducibility before relying on CI.
+3. Keep dependency reproducibility healthy.
    - The repo uses npm workspaces at the root for `ui`, `api`, and `mobile`.
-   - Prefer committing the root `package-lock.json` and removing `package-lock.json` from `.gitignore`.
-   - If the root lockfile is intentionally not committed, GitHub Actions should use `npm install` instead of `npm ci`.
+   - Prefer committing the root `package-lock.json`.
 4. Run a local validation pass:
 
 ```bash
@@ -35,7 +34,7 @@ npm run test:parity --workspace=mobile
 
 ## iOS TestFlight Strategy
 
-Use EAS Build and EAS Submit from GitHub Actions.
+Use EAS Build and EAS Submit directly from Expo/EAS.
 
 This is preferred over a raw macOS/Xcode workflow because EAS handles remote iOS build machines, signing credentials, provisioning profiles, and App Store Connect submission with less repo-specific signing machinery.
 
@@ -61,12 +60,15 @@ This should create or confirm:
 Create the app in App Store Connect before the first submit:
 
 - Name: `Infinity Finances`
-- Bundle ID: `com.infinityfinances.mobile`
-- SKU: use a stable unique value, for example `com.infinityfinances.mobile`
+- Bundle ID: `com.infinitefinances.app`
+- SKU: use a stable unique value, for example `com.infinitefinances.app`
 - Platform: iOS
 - Apple Team ID: `T6GYVDW7V2`
 
 Record the App Store Connect app Apple ID. This is the `ascAppId` used by EAS Submit.
+
+Before EAS can submit to TestFlight, set `submit.production.ios.ascAppId` in
+`mobile/eas.json` to that numeric Apple ID.
 
 ## Recommended `mobile/eas.json`
 
@@ -103,101 +105,41 @@ Also add an iOS build number to `mobile/app.json` if EAS does not add one automa
 {
   "expo": {
     "ios": {
-      "bundleIdentifier": "com.infinityfinances.mobile",
+      "bundleIdentifier": "com.infinitefinances.app",
       "buildNumber": "1"
     }
   }
 }
 ```
 
-## GitHub Actions Workflow
+## TestFlight Build
 
-Create `.github/workflows/ios-testflight.yml`.
+Run a build and submit it to TestFlight from `mobile/`:
 
-If the root lockfile is committed, use `npm ci`. If it remains ignored/uncommitted, use `npm install`.
-
-```yaml
-name: iOS TestFlight
-
-on:
-  workflow_dispatch:
-
-concurrency:
-  group: ios-testflight-${{ github.ref }}
-  cancel-in-progress: false
-
-jobs:
-  testflight:
-    name: Build and Submit iOS to TestFlight
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Setup Expo and EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Typecheck mobile
-        run: npm run typecheck --workspace=mobile
-
-      - name: Check web/mobile engine parity
-        run: npm run test:parity --workspace=mobile
-
-      - name: Build and submit to TestFlight
-        working-directory: mobile
-        run: eas build --platform ios --profile production --auto-submit --non-interactive
+```bash
+npx eas-cli build --platform ios --profile production --auto-submit
 ```
 
-The initial checked-in workflow is manual-only because `ascAppId`, EAS project setup, and Apple credentials must be finished before automated TestFlight uploads will succeed.
+For the first build, EAS may ask to create or reuse Apple distribution
+credentials and provisioning profiles. Let EAS manage them unless there is a
+specific Apple account reason to use manually created credentials.
 
-After the first few TestFlight builds are stable, add this trigger:
-
-```yaml
-on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "mobile/**"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/ios-testflight.yml"
-```
+Automated TestFlight builds are defined in `mobile/.eas/workflows/ios-testflight.yml`.
+Because the Expo project GitHub base directory is `mobile`, this workflow runs
+on pushes to `main`, validates the mobile app, builds iOS with the `production`
+profile, and submits the build to TestFlight.
 
 ## GitHub Secrets
 
-Add these in GitHub:
+The iOS/TestFlight path does not require GitHub Actions secrets when builds are
+run through Expo/EAS directly.
 
-`Settings -> Secrets and variables -> Actions -> Repository secrets`
-
-Required for iOS:
-
-- `EXPO_TOKEN`: Expo personal access token used by `expo/expo-github-action`.
-
-Optional for Apple credential repair or fully non-interactive Apple auth:
-
-- `EXPO_ASC_API_KEY_P8`: contents of the App Store Connect `.p8` key.
-- `EXPO_ASC_KEY_ID`: App Store Connect API key id.
-- `EXPO_ASC_ISSUER_ID`: App Store Connect issuer id.
-- `EXPO_APPLE_TEAM_ID`: `T6GYVDW7V2`.
-- `EXPO_APPLE_TEAM_TYPE`: `COMPANY_OR_ORGANIZATION` or `INDIVIDUAL`, depending on the Apple Developer account.
-
-Already required by the existing Supabase migration workflow:
+The Supabase migration workflow still uses:
 
 - `SUPABASE_ACCESS_TOKEN`
-- `SUPABASE_DB_PASSWORD`
 - `SUPABASE_PROJECT_ID`
+- `SUPABASE_DATABASE_URL`
+- `RESEND_API_KEY`
 
 ## Expo/EAS Environment Variables
 
@@ -271,8 +213,9 @@ Confirm:
 The existing migration workflow uses:
 
 - `SUPABASE_ACCESS_TOKEN`
-- `SUPABASE_DB_PASSWORD`
 - `SUPABASE_PROJECT_ID`
+- `SUPABASE_DATABASE_URL`
+- `RESEND_API_KEY`
 
 ## First TestFlight Release Checklist
 
@@ -281,8 +224,8 @@ The existing migration workflow uses:
 3. Confirm Vercel preview deploy passes.
 4. Confirm Railway deploy is healthy or manually deploy the API service.
 5. Confirm Supabase migration workflow passes.
-6. Add all GitHub, Vercel, Railway, EAS, Apple, and Supabase secrets/settings listed above.
-7. Run the iOS TestFlight workflow manually.
+6. Add all Vercel, Railway, EAS, Apple, GitHub Supabase, and Supabase settings listed above.
+7. Run `npx eas-cli build --platform ios --profile production --auto-submit` from `mobile/`.
 8. In App Store Connect, wait for processing to complete.
 9. Add the build to internal TestFlight testing.
 10. Install via TestFlight and smoke test:
@@ -297,7 +240,7 @@ The existing migration workflow uses:
 
 ## Follow-Up Improvements
 
-- Add a separate mobile CI workflow for PRs that runs typecheck and parity tests without building TestFlight.
+- Add a separate mobile CI workflow for PRs that runs typecheck and parity tests.
 - Add branch protection that requires web build, API build, mobile typecheck, and Supabase migration checks before merging.
 - Add release notes generation for TestFlight builds.
 - Add Android internal testing later using the same EAS project.

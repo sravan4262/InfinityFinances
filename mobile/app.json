@@ -5,15 +5,21 @@
     "scheme": "infinityfinances",
     "version": "0.1.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.infinityfinances.mobile",
-      "buildNumber": "1"
+      "bundleIdentifier": "com.infinitefinances.app",
+      "buildNumber": "1",
+      "icon": "./assets/icon.png",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "com.infinityfinances.mobile",
+      "package": "com.infinitefinances.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#008c8e"
       }
     },
@@ -23,6 +29,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7092f94d-5830-4ef9-ab0b-f2aff987c287"
+      }
+    },
+    "owner": "sravan4262"
   }
 }
