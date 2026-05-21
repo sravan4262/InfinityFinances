@@ -124,10 +124,10 @@ For the first build, EAS may ask to create or reuse Apple distribution
 credentials and provisioning profiles. Let EAS manage them unless there is a
 specific Apple account reason to use manually created credentials.
 
-Automated TestFlight builds are defined in `mobile/.eas/workflows/ios-testflight.yml`.
-Because the Expo project GitHub base directory is `mobile`, this workflow runs
-on pushes to `main`, validates the mobile app, builds iOS with the `production`
-profile, and submits the build to TestFlight.
+Manual TestFlight builds are defined in `mobile/.eas/workflows/ios-testflight.yml`.
+Because the Expo project GitHub base directory is `mobile`, this workflow can be
+run from Expo/EAS when you want a TestFlight build. It validates the mobile app,
+builds iOS with the `production` profile, and submits the build to TestFlight.
 
 ## GitHub Secrets
 
@@ -225,7 +225,7 @@ The existing migration workflow uses:
 4. Confirm Railway deploy is healthy or manually deploy the API service.
 5. Confirm Supabase migration workflow passes.
 6. Add all Vercel, Railway, EAS, Apple, GitHub Supabase, and Supabase settings listed above.
-7. Run `npx eas-cli build --platform ios --profile production --auto-submit` from `mobile/`.
+7. Run the EAS `ios-testflight.yml` workflow manually, or run `npx eas-cli build --platform ios --profile production --auto-submit` from `mobile/`.
 8. In App Store Connect, wait for processing to complete.
 9. Add the build to internal TestFlight testing.
 10. Install via TestFlight and smoke test:
