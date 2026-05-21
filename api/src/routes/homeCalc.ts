@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { sql } from "../lib/supabase.js";
+import { badRequest, notFound } from "../lib/errors.js";
 import { authMiddleware } from "../middleware/auth.js";
 import type { AppVariables, DbHomeCalcProfile } from "../types.js";
 
@@ -10,7 +11,7 @@ app.use("*", authMiddleware);
 app.get("/", async (c) => {
   const userId = c.get("userId");
   const rows = await sql<DbHomeCalcProfile[]>`
-    select * from home_calc_profiles
+    select * from home.profiles
     where user_id = ${userId}::uuid
     order by updated_at desc
   `;
@@ -27,11 +28,11 @@ app.post("/", async (c) => {
   }>();
 
   if (!body.name) {
-    return c.json({ error: "name is required" }, 400);
+    throw badRequest("Name is required.");
   }
 
   const [profile] = (await sql`
-    insert into home_calc_profiles (user_id, name, break_even, mortgage, affordability)
+    insert into home.profiles (user_id, name, break_even, mortgage, affordability)
     values (
       ${userId}::uuid,
       ${body.name},
@@ -47,13 +48,13 @@ app.post("/", async (c) => {
 app.get("/:id", async (c) => {
   const userId = c.get("userId");
   const id = c.req.param("id");
-  if (!id) return c.json({ error: "Not found" }, 404);
+  if (!id) throw notFound();
 
   const [profile] = (await sql`
-    select * from home_calc_profiles
+    select * from home.profiles
     where id = ${id}::uuid and user_id = ${userId}::uuid
   `) as DbHomeCalcProfile[];
-  if (!profile) return c.json({ error: "Not found" }, 404);
+  if (!profile) throw notFound();
   return c.json(profile);
 });
 
@@ -66,10 +67,10 @@ app.put("/:id", async (c) => {
     mortgage?: unknown;
     affordability?: unknown;
   }>();
-  if (!id) return c.json({ error: "Not found" }, 404);
+  if (!id) throw notFound();
 
   const [profile] = (await sql`
-    update home_calc_profiles
+    update home.profiles
     set updated_at = now()
       ${body.name !== undefined ? sql`, name = ${body.name}` : sql``}
       ${body.breakEven !== undefined ? sql`, break_even = ${sql.json(body.breakEven as any)}` : sql``}
@@ -78,21 +79,21 @@ app.put("/:id", async (c) => {
     where id = ${id}::uuid and user_id = ${userId}::uuid
     returning *
   `) as DbHomeCalcProfile[];
-  if (!profile) return c.json({ error: "Not found" }, 404);
+  if (!profile) throw notFound();
   return c.json(profile);
 });
 
 app.delete("/:id", async (c) => {
   const userId = c.get("userId");
   const id = c.req.param("id");
-  if (!id) return c.json({ error: "Not found" }, 404);
+  if (!id) throw notFound();
 
   const [profile] = (await sql`
-    delete from home_calc_profiles
+    delete from home.profiles
     where id = ${id}::uuid and user_id = ${userId}::uuid
     returning *
   `) as DbHomeCalcProfile[];
-  if (!profile) return c.json({ error: "Not found" }, 404);
+  if (!profile) throw notFound();
   return c.json({ success: true });
 });
 

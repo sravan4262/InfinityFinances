@@ -1,15 +1,22 @@
-name: Supabase Migrations
+name: Supabase Migrations (Infinity Finances)
 
 on:
   push:
     branches: [main]
     paths:
       - "supabase/migrations/**"
+      - "supabase/scripts/**"
+      - ".github/workflows/supabase-migrate.yml"
   workflow_dispatch:
 
 jobs:
   migrate:
+    name: Push migrations to Supabase
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID:  ${{ secrets.SUPABASE_PROJECT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -17,9 +24,24 @@ jobs:
         with:
           version: latest
 
-      - name: Run migrations
-        run: |
-          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_ID }}
-          supabase db push
+      - name: Link to Infinity Finances project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Push schema + migrations
+        run: supabase db push
+
+      # Per-user feature flag seed runs after migrations against the
+      # freshly-migrated schema. It uses psql variable substitution
+      # (\set + :'var'), so we run it with psql rather than the supabase
+      # CLI. DATABASE_URL is the direct Postgres connection built from the
+      # same secrets the CLI already uses.
+      #
+      # `seed-feature-flag-global.sql` is intentionally NOT run here —
+      # flipping the global toggle is a deliberate manual action, not
+      # something that should happen on every deploy. Run it by hand from
+      # the Supabase SQL editor (or via psql) when you want to roll out.
+      - name: Seed per-user feature flags
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          DATABASE_URL: postgres://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@db.${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co:5432/postgres
+          PGSSLMODE: require
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/scripts/seed-feature-flag-user.sql

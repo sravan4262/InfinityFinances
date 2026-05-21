@@ -1,6 +1,13 @@
 import { apiFetch } from "./client";
 import type { FireInputs } from "@/lib/engine/types";
 
+function normalizePlanName(name: string) {
+  return name
+    .trim()
+    .replace(/\s+/g, " ")
+    .toUpperCase();
+}
+
 export interface SavedPlan {
   id: string;
   userId: string;
@@ -19,13 +26,16 @@ export const plansApi = {
   create: (name: string, inputs: FireInputs) =>
     apiFetch<SavedPlan>("/plans", {
       method: "POST",
-      body: JSON.stringify({ name, inputs }),
+      body: JSON.stringify({ name: normalizePlanName(name), inputs }),
     }),
 
   update: (id: string, patch: Partial<Pick<SavedPlan, "name" | "inputs" | "isPublic">>) =>
     apiFetch<SavedPlan>(`/plans/${id}`, {
       method: "PUT",
-      body: JSON.stringify(patch),
+      body: JSON.stringify({
+        ...patch,
+        ...(patch.name !== undefined ? { name: normalizePlanName(patch.name) } : {}),
+      }),
     }),
 
   delete: (id: string) =>

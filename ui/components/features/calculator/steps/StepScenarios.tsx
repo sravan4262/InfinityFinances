@@ -4,6 +4,7 @@ import { useValidationErrors } from "@/lib/ValidationContext";
 import { NumberField } from "@/components/ui/NumberField";
 import { Slider } from "@/components/ui/slider";
 import { formatCurrency } from "@/lib/utils";
+import { getFireCurrency } from "@/lib/currency";
 import { Zap } from "lucide-react";
 import { useState } from "react";
 import type { FireInputs } from "@/lib/engine/types";
@@ -38,6 +39,8 @@ export function StepScenarios() {
 
   const activeInputs: FireInputs = includeSpouse && person === "spouse" ? spouseInputs : inputs;
   const activeUpdate = includeSpouse && person === "spouse" ? updateSpouseInputs : updateInputs;
+  const currency = inputs.currency ?? "USD";
+  const currencySymbol = getFireCurrency(currency).symbol;
 
   const fireNumber = activeInputs.withdrawalRate > 0
     ? activeInputs.retirementSpending / activeInputs.withdrawalRate
@@ -57,16 +60,16 @@ export function StepScenarios() {
       )}
 
       {/* FIRE number preview */}
-      <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center glow-indigo">
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 text-center glow-primary">
         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">
           {includeSpouse && person === "spouse" ? "Spouse's FIRE number" : "Your FIRE number"}
         </p>
         <p className="text-4xl font-bold text-primary tabular-nums">
-          {fireNumber > 0 ? formatCurrency(fireNumber) : "—"}
+          {fireNumber > 0 ? formatCurrency(fireNumber, false, currency) : "—"}
         </p>
         <p className="text-xs text-muted-foreground mt-2">
           {activeInputs.retirementSpending > 0 && activeInputs.withdrawalRate > 0
-            ? `${formatCurrency(activeInputs.retirementSpending)} ÷ ${(activeInputs.withdrawalRate * 100).toFixed(1)}% withdrawal rate`
+            ? `${formatCurrency(activeInputs.retirementSpending, false, currency)} ÷ ${(activeInputs.withdrawalRate * 100).toFixed(1)}% withdrawal rate`
             : "Enter retirement spending and withdrawal rate above"}
         </p>
       </div>
@@ -95,7 +98,7 @@ export function StepScenarios() {
           label="Annual retirement spending"
           value={activeInputs.retirementSpending}
           onChange={(v) => activeUpdate({ retirementSpending: v })}
-          prefix="$"
+          prefix={currencySymbol}
           format="currency"
           placeholder="e.g. 60,000"
           hint={
@@ -120,7 +123,7 @@ export function StepScenarios() {
           >
             <p className="text-xs text-muted-foreground">{label} FIRE</p>
             <p className={`text-sm font-bold mt-1 ${color}`}>
-              {formatCurrency(fireNumber * multiplier, true)}
+              {formatCurrency(fireNumber * multiplier, true, currency)}
             </p>
           </div>
         ))}

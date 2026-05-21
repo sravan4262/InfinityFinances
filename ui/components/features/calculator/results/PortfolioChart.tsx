@@ -11,7 +11,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import type { YearlyRow } from "@/lib/engine/types";
+import type { FireCurrency, YearlyRow } from "@/lib/engine/types";
 import type { MonteCarloPercentileRow } from "@/lib/engine/types";
 import { formatCurrency } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -24,6 +24,7 @@ interface PortfolioChartProps {
   whatIfRows?: YearlyRow[];
   whatIfFireAge?: number | null;
   monteCarloRows?: MonteCarloPercentileRow[];
+  currency?: FireCurrency;
 }
 
 type ChartRow = YearlyRow & {
@@ -33,7 +34,7 @@ type ChartRow = YearlyRow & {
 
 const BG_FILL = "oklch(0.07 0.025 265)";
 
-function CustomTooltip({ active, payload }: any) {
+function CustomTooltip({ active, payload, currency }: any) {
   if (!active || !payload?.length) return null;
   const row: ChartRow = payload[0].payload;
   const hasWhatIf = row.whatIfPortfolio != null;
@@ -44,19 +45,19 @@ function CustomTooltip({ active, payload }: any) {
       <div className="space-y-1">
         <div className="flex justify-between gap-6">
           <span className="text-muted-foreground">Base</span>
-          <span className="font-medium text-primary">{formatCurrency(row.portfolio, true)}</span>
+          <span className="font-medium text-primary">{formatCurrency(row.portfolio, true, currency)}</span>
         </div>
         {hasWhatIf && (
           <>
             <div className="flex justify-between gap-6">
               <span className="text-muted-foreground">What-if</span>
-              <span className="font-medium text-gold">{formatCurrency(row.whatIfPortfolio!, true)}</span>
+              <span className="font-medium text-gold">{formatCurrency(row.whatIfPortfolio!, true, currency)}</span>
             </div>
             <div className="flex justify-between gap-6 border-t border-border/40 pt-1">
               <span className="text-muted-foreground">Δ</span>
               <span className={row.whatIfPortfolio! >= row.portfolio ? "text-success font-medium" : "text-destructive font-medium"}>
                 {row.whatIfPortfolio! >= row.portfolio ? "+" : ""}
-                {formatCurrency(row.whatIfPortfolio! - row.portfolio, true)}
+                {formatCurrency(row.whatIfPortfolio! - row.portfolio, true, currency)}
               </span>
             </div>
           </>
@@ -66,22 +67,22 @@ function CustomTooltip({ active, payload }: any) {
             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Monte Carlo</p>
             <div className="flex justify-between gap-6">
               <span className="text-muted-foreground">p90</span>
-              <span className="font-medium text-indigo-300">{formatCurrency(row.mcP90!, true)}</span>
+              <span className="font-medium text-cyan-300">{formatCurrency(row.mcP90!, true, currency)}</span>
             </div>
             <div className="flex justify-between gap-6">
               <span className="text-muted-foreground">median</span>
-              <span className="font-medium">{formatCurrency(row.mcP50!, true)}</span>
+              <span className="font-medium">{formatCurrency(row.mcP50!, true, currency)}</span>
             </div>
             <div className="flex justify-between gap-6">
               <span className="text-muted-foreground">p10</span>
-              <span className="font-medium text-destructive/80">{formatCurrency(row.mcP10!, true)}</span>
+              <span className="font-medium text-destructive/80">{formatCurrency(row.mcP10!, true, currency)}</span>
             </div>
           </div>
         )}
         {!row.isRetired && row.annualSavings > 0 && (
           <div className="flex justify-between gap-6">
             <span className="text-muted-foreground">Saved</span>
-            <span className="font-medium text-success">{formatCurrency(row.annualSavings, true)}</span>
+            <span className="font-medium text-success">{formatCurrency(row.annualSavings, true, currency)}</span>
           </div>
         )}
         {row.isFire && (
@@ -100,6 +101,7 @@ export function PortfolioChart({
   whatIfRows,
   whatIfFireAge,
   monteCarloRows,
+  currency,
 }: PortfolioChartProps) {
   const hasWhatIf = !!whatIfRows?.length;
   const hasMC = !!monteCarloRows?.length;
@@ -154,7 +156,7 @@ export function PortfolioChart({
           )}
           {hasMC && (
             <span className="flex items-center gap-1.5">
-              <span className="w-5 h-3 rounded-sm inline-block" style={{ background: "oklch(0.62 0.22 270 / 25%)", border: "1px solid oklch(0.62 0.22 270 / 50%)" }} />
+              <span className="w-5 h-3 rounded-sm inline-block" style={{ background: "oklch(0.68 0.15 195 / 25%)", border: "1px solid oklch(0.68 0.15 195 / 50%)" }} />
               p10–p90
             </span>
           )}
@@ -169,8 +171,8 @@ export function PortfolioChart({
         <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="oklch(0.62 0.22 270)" stopOpacity={0.4} />
-              <stop offset="100%" stopColor="oklch(0.62 0.22 270)" stopOpacity={0.02} />
+              <stop offset="0%" stopColor="oklch(0.68 0.15 195)" stopOpacity={0.4} />
+              <stop offset="100%" stopColor="oklch(0.68 0.15 195)" stopOpacity={0.02} />
             </linearGradient>
             <linearGradient id="whatIfGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="oklch(0.76 0.155 75)" stopOpacity={0.25} />
@@ -178,12 +180,12 @@ export function PortfolioChart({
             </linearGradient>
             {/* MC outer band gradient */}
             <linearGradient id="mcOuterGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="oklch(0.62 0.22 270)" stopOpacity={0.18} />
-              <stop offset="100%" stopColor="oklch(0.62 0.22 270)" stopOpacity={0.04} />
+              <stop offset="0%" stopColor="oklch(0.68 0.15 195)" stopOpacity={0.18} />
+              <stop offset="100%" stopColor="oklch(0.68 0.15 195)" stopOpacity={0.04} />
             </linearGradient>
             <linearGradient id="mcInnerGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="oklch(0.62 0.22 270)" stopOpacity={0.28} />
-              <stop offset="100%" stopColor="oklch(0.62 0.22 270)" stopOpacity={0.06} />
+              <stop offset="0%" stopColor="oklch(0.68 0.15 195)" stopOpacity={0.28} />
+              <stop offset="100%" stopColor="oklch(0.68 0.15 195)" stopOpacity={0.06} />
             </linearGradient>
           </defs>
           <CartesianGrid
@@ -202,10 +204,10 @@ export function PortfolioChart({
             tick={{ fill: "oklch(0.55 0.02 265)", fontSize: 11 }}
             axisLine={false}
             tickLine={false}
-            tickFormatter={(v) => formatCurrency(v, true)}
+            tickFormatter={(v) => formatCurrency(v, true, currency)}
             width={52}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip content={<CustomTooltip currency={currency} />} />
 
           {/* FIRE target reference */}
           <ReferenceLine
@@ -219,10 +221,10 @@ export function PortfolioChart({
           {retirementAge && (
             <ReferenceLine
               x={retirementAge}
-              stroke="oklch(0.62 0.22 270 / 50%)"
+              stroke="oklch(0.68 0.15 195 / 50%)"
               strokeDasharray="4 3"
               strokeWidth={1}
-              label={{ value: "Retire", fill: "oklch(0.62 0.22 270)", fontSize: 10, position: "top" }}
+              label={{ value: "Retire", fill: "oklch(0.68 0.15 195)", fontSize: 10, position: "top" }}
             />
           )}
 
@@ -292,7 +294,7 @@ export function PortfolioChart({
               <Line
                 type="monotone"
                 dataKey="mcP50"
-                stroke="oklch(0.62 0.22 270 / 55%)"
+                stroke="oklch(0.68 0.15 195 / 55%)"
                 strokeWidth={1}
                 strokeDasharray="3 2"
                 dot={false}
@@ -324,11 +326,11 @@ export function PortfolioChart({
           <Area
             type="monotone"
             dataKey="portfolio"
-            stroke="oklch(0.62 0.22 270)"
+            stroke="oklch(0.68 0.15 195)"
             strokeWidth={2}
             fill="url(#portfolioGradient)"
             dot={false}
-            activeDot={{ r: 4, fill: "oklch(0.62 0.22 270)", stroke: "oklch(0.07 0.025 265)", strokeWidth: 2 }}
+            activeDot={{ r: 4, fill: "oklch(0.68 0.15 195)", stroke: "oklch(0.07 0.025 265)", strokeWidth: 2 }}
             isAnimationActive
             animationDuration={1200}
             animationEasing="ease-out"

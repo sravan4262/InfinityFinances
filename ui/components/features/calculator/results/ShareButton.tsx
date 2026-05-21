@@ -13,25 +13,26 @@ function buildSummary(results: FireResults, inputs: FireInputs): string {
   const fireAgeStr = results.fireAge ? `Age ${results.fireAge}` : "Not yet reached";
   const depletionStr = results.depletionAge ? `Age ${results.depletionAge}` : `${inputs.lifeExpectancy}+`;
   const monthlyTarget = inputs.monthlyRetirementSalary ?? inputs.retirementSpending / 12;
+  const currency = inputs.currency ?? "USD";
 
   const lines = [
     "🔥 FIRE Projection Summary",
     "─────────────────────────",
-    `FIRE number:       ${formatCurrency(results.fireNumber)}`,
+    `FIRE number:       ${formatCurrency(results.fireNumber, false, currency)}`,
     `Retire at:         ${fireAgeStr}`,
     `Years to FIRE:     ${results.yearsToFire != null ? `${results.yearsToFire} years` : "—"}`,
     `Savings rate:      ${formatPct(results.currentSavingsRate)}`,
-    `Monthly target:    ${formatCurrency(monthlyTarget)}/mo`,
-    `PV corpus needed:  ${formatCurrency(results.requiredCorpusPV)}`,
+    `Monthly target:    ${formatCurrency(monthlyTarget, false, currency)}/mo`,
+    `PV corpus needed:  ${formatCurrency(results.requiredCorpusPV, false, currency)}`,
     `Money lasts until: ${depletionStr}`,
     "─────────────────────────",
-    `Lean FIRE:    ${formatCurrency(results.leanFireNumber)}`,
-    `Standard:     ${formatCurrency(results.fireNumber)}`,
-    `Barista FIRE: ${formatCurrency(results.baristaFireNumber)}`,
-    `Fat FIRE:     ${formatCurrency(results.fatFireNumber)}`,
-    `Coast FIRE:   ${formatCurrency(results.coastFireNumber)}`,
+    `Lean FIRE:    ${formatCurrency(results.leanFireNumber, false, currency)}`,
+    `Standard:     ${formatCurrency(results.fireNumber, false, currency)}`,
+    `Barista FIRE: ${formatCurrency(results.baristaFireNumber, false, currency)}`,
+    `Fat FIRE:     ${formatCurrency(results.fatFireNumber, false, currency)}`,
+    `Coast FIRE:   ${formatCurrency(results.coastFireNumber, false, currency)}`,
     "─────────────────────────",
-    "Calculated with FIREcalc",
+    "Calculated with Infinity Finances",
   ];
   return lines.join("\n");
 }

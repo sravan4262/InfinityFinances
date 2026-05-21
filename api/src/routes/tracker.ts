@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { sql } from "../lib/supabase.js";
+import { badRequest, notFound } from "../lib/errors.js";
 import { authMiddleware } from "../middleware/auth.js";
 import type { AppVariables, DbTrackerCategory, DbTrackerEntry } from "../types.js";
 
@@ -13,11 +14,11 @@ app.get("/entries", async (c) => {
 
   const rows = month
     ? await sql<DbTrackerEntry[]>`
-        select * from tracker_entries
+        select * from retirement.tracker_entries
         where user_id = ${userId}::uuid and month = ${month}
       `
     : await sql<DbTrackerEntry[]>`
-        select * from tracker_entries where user_id = ${userId}::uuid
+        select * from retirement.tracker_entries where user_id = ${userId}::uuid
       `;
   return c.json(rows);
 });
@@ -29,7 +30,7 @@ app.put("/entries", async (c) => {
   >();
 
   if (!Array.isArray(body) || body.length === 0) {
-    return c.json({ error: "Body must be a non-empty array" }, 400);
+    throw badRequest("Body must be a non-empty array.");
   }
 
   const rows = body.map((e) => ({
@@ -42,11 +43,11 @@ app.put("/entries", async (c) => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = (await sql`
-    insert into tracker_entries ${sql(rows, "user_id", "month", "category_id", "planned", "actual") as any}
+    insert into retirement.tracker_entries ${sql(rows, "user_id", "month", "category_id", "planned", "actual") as any}
     on conflict (user_id, month, category_id) do update
     set
-      planned = case when excluded.planned is not null then excluded.planned else tracker_entries.planned end,
-      actual  = case when excluded.actual  is not null then excluded.actual  else tracker_entries.actual  end
+      planned = case when excluded.planned is not null then excluded.planned else retirement.tracker_entries.planned end,
+      actual  = case when excluded.actual  is not null then excluded.actual  else retirement.tracker_entries.actual  end
     returning *
   `) as DbTrackerEntry[];
   return c.json(data);
@@ -55,7 +56,7 @@ app.put("/entries", async (c) => {
 app.get("/categories", async (c) => {
   const userId = c.get("userId");
   const rows = await sql<DbTrackerCategory[]>`
-    select * from tracker_categories
+    select * from retirement.tracker_categories
     where user_id = ${userId}::uuid
     order by sort_order
   `;
@@ -67,11 +68,11 @@ app.post("/categories", async (c) => {
   const body = await c.req.json<{ label: string; color: string }>();
 
   if (!body.label || !body.color) {
-    return c.json({ error: "label and color are required" }, 400);
+    throw badRequest("Label and color are required.");
   }
 
   const [last] = await sql<Array<{ sort_order: number }>>`
-    select sort_order from tracker_categories
+    select sort_order from retirement.tracker_categories
     where user_id = ${userId}::uuid
     order by sort_order desc
     limit 1
@@ -79,7 +80,7 @@ app.post("/categories", async (c) => {
   const sortOrder = last ? last.sort_order + 1 : 0;
 
   const [cat] = await sql<DbTrackerCategory[]>`
-    insert into tracker_categories (user_id, label, color, sort_order)
+    insert into retirement.tracker_categories (user_id, label, color, sort_order)
     values (${userId}::uuid, ${body.label}, ${body.color}, ${sortOrder})
     returning *
   `;
@@ -91,11 +92,11 @@ app.delete("/categories/:id", async (c) => {
   const id = c.req.param("id");
 
   const [cat] = await sql<DbTrackerCategory[]>`
-    delete from tracker_categories
+    delete from retirement.tracker_categories
     where id = ${id}::uuid and user_id = ${userId}::uuid
     returning *
   `;
-  if (!cat) return c.json({ error: "Not found" }, 404);
+  if (!cat) throw notFound();
   return c.json({ success: true });
 });
 

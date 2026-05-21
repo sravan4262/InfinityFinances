@@ -3,6 +3,9 @@ import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useFireStore } from "@/lib/store";
 import { calculateFireMonthly } from "@/lib/engine/monthly";
+import { FIRE_ENGINE_DEFAULTS } from "@/lib/fireDefaults";
+import { getFireCurrency } from "@/lib/currency";
+import { CurrencySelector } from "./CurrencySelector";
 import { NumberField } from "@/components/ui/NumberField";
 import { Slider } from "@/components/ui/slider";
 import { formatCurrency } from "@/lib/utils";
@@ -12,28 +15,21 @@ import {
   Flame, Target, Clock, Hourglass, TrendingUp, Settings2, Info,
 } from "lucide-react";
 
-const SIMPLE_DEFAULTS = {
-  lifeExpectancy: 90,
-  withdrawalRate: 0.04,
-  inflationRate: 0.03,
-} as const;
-
 export function SimpleCalculator() {
   const {
     inputs, updateInputs, calculate, setInputMode,
     includeSpouse, spouseInputs,
   } = useFireStore();
 
-  // Apply hidden defaults silently the first time the user lands on Simple
-  // mode. These are the same values the engine would otherwise default to —
-  // we set them on the inputs object so what the user sees in the live preview
-  // is exactly what the engine computes (no divergence).
+  // Apply hidden engine defaults silently the first time the user lands on
+  // Simple mode. Same constants the chat-Calculate flow uses (see
+  // FIRE_ENGINE_DEFAULTS) so both surfaces produce identical numbers.
   useEffect(() => {
     const patch: Partial<typeof inputs> = {};
-    if (!inputs.lifeExpectancy) patch.lifeExpectancy = SIMPLE_DEFAULTS.lifeExpectancy;
-    if (!inputs.withdrawalRate) patch.withdrawalRate = SIMPLE_DEFAULTS.withdrawalRate;
-    if (!inputs.inflationRate) patch.inflationRate = SIMPLE_DEFAULTS.inflationRate;
-    if (!inputs.expectedReturn) patch.expectedReturn = 0.07;
+    if (!inputs.lifeExpectancy) patch.lifeExpectancy = FIRE_ENGINE_DEFAULTS.lifeExpectancy;
+    if (!inputs.withdrawalRate) patch.withdrawalRate = FIRE_ENGINE_DEFAULTS.withdrawalRate;
+    if (!inputs.inflationRate) patch.inflationRate = FIRE_ENGINE_DEFAULTS.inflationRate;
+    if (!inputs.expectedReturn) patch.expectedReturn = FIRE_ENGINE_DEFAULTS.expectedReturn;
     if (Object.keys(patch).length > 0) updateInputs(patch);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -44,6 +40,8 @@ export function SimpleCalculator() {
   const monthlySavings = Math.max(0, (inputs.afterTaxIncome - inputs.currentSpending) / 12);
   const monthlyRetirementSpend = inputs.monthlyRetirementSalary
     ?? (inputs.retirementSpending > 0 ? inputs.retirementSpending / 12 : 0);
+  const currency = inputs.currency ?? "USD";
+  const currencySymbol = getFireCurrency(currency).symbol;
 
   // ── Writers — every Simple field maps to the same engine fields the
   // Advanced wizard writes to. No parallel calculation, no shadow state.
@@ -125,7 +123,9 @@ export function SimpleCalculator() {
   const canCalculate = preview !== null;
 
   return (
-    <div className="w-full max-w-5xl mx-auto lg:grid lg:grid-cols-[1fr_360px] lg:gap-6 lg:items-start">
+    <div className="w-full max-w-5xl mx-auto space-y-4">
+      <CurrencySelector />
+      <div className="lg:grid lg:grid-cols-[1fr_360px] lg:gap-6 lg:items-start">
       {/* ── Left: input card ────────────────────────────────────────── */}
       <div className="glass rounded-2xl p-6 sm:p-8 space-y-6">
         <div>
@@ -184,7 +184,7 @@ export function SimpleCalculator() {
             icon={<Wallet className="w-4 h-4" />}
             value={totalSaved}
             onChange={setTotalSaved}
-            prefix="$"
+            prefix={currencySymbol}
             format="currency"
             placeholder="e.g. 80,000"
             hint="All your investments and savings combined"
@@ -194,7 +194,7 @@ export function SimpleCalculator() {
             icon={<PiggyBank className="w-4 h-4" />}
             value={monthlySavings}
             onChange={setMonthlySavings}
-            prefix="$"
+            prefix={currencySymbol}
             format="currency"
             placeholder="e.g. 2,000"
             hint="What you put away each month"
@@ -204,7 +204,7 @@ export function SimpleCalculator() {
             icon={<ShoppingBag className="w-4 h-4" />}
             value={monthlyRetirementSpend}
             onChange={setMonthlyRetire}
-            prefix="$"
+            prefix={currencySymbol}
             format="currency"
             placeholder="e.g. 5,000"
             hint="Today's dollars — we'll inflation-adjust"
@@ -280,7 +280,7 @@ export function SimpleCalculator() {
           className={cn(
             "w-full flex items-center justify-center gap-2 rounded-xl py-3.5 font-semibold transition-all",
             canCalculate
-              ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-indigo"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-primary"
               : "bg-muted text-muted-foreground/50 cursor-not-allowed"
           )}
         >
@@ -291,7 +291,7 @@ export function SimpleCalculator() {
 
       {/* ── Right: live preview panel ───────────────────────────────── */}
       <div className="lg:sticky lg:top-24 mt-6 lg:mt-0 space-y-3">
-        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 glow-indigo">
+        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 glow-primary">
           <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">
             Your FIRE number
           </p>
@@ -303,14 +303,14 @@ export function SimpleCalculator() {
               transition={{ duration: 0.2 }}
               className="text-3xl sm:text-4xl font-bold text-primary tabular-nums"
             >
-              {formatCurrency(preview.fireNumber)}
+              {formatCurrency(preview.fireNumber, false, currency)}
             </motion.p>
           ) : (
             <p className="text-3xl font-bold text-muted-foreground/40">—</p>
           )}
           <p className="text-[11px] text-muted-foreground mt-2">
             {monthlyRetirementSpend > 0 && inputs.withdrawalRate > 0
-              ? `${formatCurrency(monthlyRetirementSpend)}/mo × 12 ÷ ${(inputs.withdrawalRate * 100).toFixed(1)}%`
+              ? `${formatCurrency(monthlyRetirementSpend, false, currency)}/mo × 12 ÷ ${(inputs.withdrawalRate * 100).toFixed(1)}%`
               : "Fill in the form to see your number"}
           </p>
         </div>
@@ -349,7 +349,7 @@ export function SimpleCalculator() {
 
         {preview && preview.gapAtTargetAge < 0 && (
           <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs">
-            <p className="font-medium text-warning">Short by {formatCurrency(Math.abs(preview.gapAtTargetAge))}</p>
+            <p className="font-medium text-warning">Short by {formatCurrency(Math.abs(preview.gapAtTargetAge), false, currency)}</p>
             <p className="text-muted-foreground mt-1">
               At age {inputs.retirementAge} you&apos;ll be below the FIRE number.
               {preview.fireAge ? ` FIRE reached at ${preview.fireAge} instead.` : " Try saving more or retiring later."}
@@ -359,13 +359,14 @@ export function SimpleCalculator() {
         {preview && preview.gapAtTargetAge >= 0 && (
           <div className="rounded-xl border border-success/30 bg-success/5 p-3 text-xs">
             <p className="font-medium text-success">
-              On track with a {formatCurrency(preview.gapAtTargetAge, true)} cushion
+              On track with a {formatCurrency(preview.gapAtTargetAge, true, currency)} cushion
             </p>
             <p className="text-muted-foreground mt-1">
               At age {inputs.retirementAge} you&apos;ll have more than your FIRE number.
             </p>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

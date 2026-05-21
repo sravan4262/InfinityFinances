@@ -2,6 +2,7 @@
 import { useFireStore } from "@/lib/store";
 import { NumberField } from "@/components/ui/NumberField";
 import { formatCurrency } from "@/lib/utils";
+import { getAssetPresets, getFireCurrency } from "@/lib/currency";
 import { useState } from "react";
 import {
   Wallet, TrendingUp, Activity, Plus, Trash2,
@@ -11,24 +12,8 @@ import type { AssetClass, AccountType, FireInputs } from "@/lib/engine/types";
 
 type Person = "you" | "spouse";
 
-const ASSET_PRESETS: { label: string; annualReturn: number; accountType: AccountType }[] = [
-  { label: "Stocks / Equity",     annualReturn: 0.10, accountType: "taxable" },
-  { label: "Bonds / FDs / Debt",  annualReturn: 0.06, accountType: "taxable" },
-  { label: "Real Estate",         annualReturn: 0.08, accountType: "taxable" },
-  { label: "Gold",                annualReturn: 0.07, accountType: "taxable" },
-  { label: "SIP / Mutual Funds",  annualReturn: 0.12, accountType: "taxable" },
-  { label: "Cash / HYSA",         annualReturn: 0.04, accountType: "taxable" },
-  { label: "Roth IRA",            annualReturn: 0.10, accountType: "roth"    },
-  { label: "Roth 401(k)",         annualReturn: 0.09, accountType: "roth"    },
-  { label: "Traditional 401(k)",  annualReturn: 0.09, accountType: "traditional" },
-  { label: "Traditional IRA",     annualReturn: 0.09, accountType: "traditional" },
-  { label: "EPF / PPF",           annualReturn: 0.08, accountType: "traditional" },
-  { label: "HSA",                 annualReturn: 0.08, accountType: "traditional" },
-  { label: "Other",               annualReturn: 0.07, accountType: "taxable" },
-];
-
 const ACCOUNT_TYPE_LABELS: Record<AccountType, { label: string; color: string; bg: string }> = {
-  taxable:     { label: "Taxable",     color: "oklch(0.62 0.22 270)", bg: "bg-primary/10 text-primary" },
+  taxable:     { label: "Taxable",     color: "oklch(0.68 0.15 195)", bg: "bg-primary/10 text-primary" },
   roth:        { label: "Roth",        color: "oklch(0.65 0.18 150)", bg: "bg-success/10 text-success" },
   traditional: { label: "Traditional", color: "oklch(0.76 0.155 75)", bg: "bg-gold/10 text-gold" },
 };
@@ -87,6 +72,9 @@ export function StepPortfolio() {
   const activeUpdate = includeSpouse && person === "spouse" ? updateSpouseInputs : updateInputs;
 
   const { assets, inflationRate } = activeInputs;
+  const currency = inputs.currency ?? "USD";
+  const currencySymbol = getFireCurrency(currency).symbol;
+  const assetPresets = getAssetPresets(currency);
 
   const toggleAsset = (idx: number) => {
     setExpandedAssets((prev) => {
@@ -113,7 +101,18 @@ export function StepPortfolio() {
   };
   const addAsset = () => {
     const newIdx = assets.length;
-    activeUpdate({ assets: [...assets, { label: "Stocks / Equity", value: 0, annualReturn: 0.10, accountType: "taxable" }] });
+    const preset = assetPresets[0];
+    activeUpdate({
+      assets: [
+        ...assets,
+        {
+          label: preset.label,
+          value: 0,
+          annualReturn: preset.annualReturn,
+          accountType: preset.accountType,
+        },
+      ],
+    });
     setExpandedAssets((prev) => new Set([...prev, newIdx]));
   };
   const removeAsset = (idx: number) => {
@@ -147,7 +146,7 @@ export function StepPortfolio() {
           {includeSpouse && person === "spouse" ? "Spouse's net worth" : "Total net worth"}
         </div>
         <span className="text-xl font-bold text-primary tabular-nums">
-          {formatCurrency(totalNetWorth)}
+          {formatCurrency(totalNetWorth, false, currency)}
         </span>
       </div>
 
@@ -169,7 +168,7 @@ export function StepPortfolio() {
                   <span className="text-sm font-medium truncate">{asset.label}</span>
                   {!isOpen && asset.value > 0 && (
                     <span className="text-xs text-muted-foreground ml-1 shrink-0">
-                      {formatCurrency(asset.value)}
+                      {formatCurrency(asset.value, false, currency)}
                     </span>
                   )}
                 </button>
@@ -196,7 +195,7 @@ export function StepPortfolio() {
                   <select
                     value={asset.label}
                     onChange={(e) => {
-                      const preset = ASSET_PRESETS.find((p) => p.label === e.target.value);
+                      const preset = assetPresets.find((p) => p.label === e.target.value);
                       updateAsset(idx, {
                         label: e.target.value,
                         ...(preset ? { annualReturn: preset.annualReturn, accountType: preset.accountType } : {}),
@@ -204,10 +203,10 @@ export function StepPortfolio() {
                     }}
                     className="w-full bg-transparent text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary rounded px-2 py-1.5 border border-border"
                   >
-                    {ASSET_PRESETS.map((p) => (
+                    {assetPresets.map((p) => (
                       <option key={p.label} value={p.label}>{p.label}</option>
                     ))}
-                    {!ASSET_PRESETS.find((p) => p.label === asset.label) && (
+                    {!assetPresets.find((p) => p.label === asset.label) && (
                       <option value={asset.label}>{asset.label}</option>
                     )}
                   </select>
@@ -241,7 +240,7 @@ export function StepPortfolio() {
                       label="Current value"
                       value={asset.value}
                       onChange={(v) => updateAsset(idx, { value: v })}
-                      prefix="$"
+                      prefix={currencySymbol}
                       format="currency"
                       placeholder="e.g. 50,000"
                     />
@@ -259,7 +258,7 @@ export function StepPortfolio() {
                       label="Monthly investment"
                       value={asset.monthlyContribution ?? 0}
                       onChange={(v) => updateAsset(idx, { monthlyContribution: v || undefined })}
-                      prefix="$"
+                      prefix={currencySymbol}
                       format="currency"
                       placeholder="e.g. 500"
                       hint="Ongoing monthly contribution to this asset"
@@ -336,7 +335,7 @@ export function StepPortfolio() {
           {totalMonthlyContributions > 0 && (
             <div>
               <span className="text-muted-foreground text-xs block">Monthly invest.</span>
-              <span className="font-semibold mt-0.5 block">{formatCurrency(totalMonthlyContributions)}/mo</span>
+              <span className="font-semibold mt-0.5 block">{formatCurrency(totalMonthlyContributions, false, currency)}/mo</span>
             </div>
           )}
         </div>

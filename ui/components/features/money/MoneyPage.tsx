@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -14,6 +15,7 @@ import {
   StickyNote,
 } from "lucide-react";
 import { useMoneyStore } from "@/lib/money/store";
+import { useUser } from "@/lib/hooks/useUser";
 import { monthLabel, txInMonth, totalsByKind } from "@/lib/money/selectors";
 import { formatCurrency } from "@/lib/utils";
 import { DailyView } from "./views/DailyView";
@@ -24,6 +26,7 @@ import { StatsView } from "./views/StatsView";
 import { BudgetView } from "./views/BudgetView";
 import { NotesView } from "./views/NotesView";
 import { AddTransactionSheet } from "./AddTransactionSheet";
+import { useChatContextStore } from "@/lib/chatContextStore";
 
 type ViewTab = "daily" | "calendar" | "monthly" | "summary" | "stats" | "budget" | "notes";
 
@@ -55,19 +58,47 @@ function nextMonth(m: string): string {
 }
 
 export function MoneyPage() {
+  const router = useRouter();
   const [month, setMonth] = useState(currentMonth());
   const [view, setView] = useState<ViewTab>("daily");
   const [addOpen, setAddOpen] = useState(false);
   const [editTxId, setEditTxId] = useState<string | null>(null);
   const transactions = useMoneyStore((s) => s.transactions);
   const materializeRecurring = useMoneyStore((s) => s.materializeRecurring);
+  const initSync = useMoneyStore((s) => s.initSync);
+  const disconnectSync = useMoneyStore((s) => s.disconnectSync);
+  const syncUserId = useMoneyStore((s) => s.syncUserId);
+  const { user } = useUser();
 
   useEffect(() => {
     materializeRecurring();
   }, [materializeRecurring]);
 
+  useEffect(() => {
+    if (user?.id && syncUserId !== user.id) {
+      initSync(user.id);
+    } else if (user === null && syncUserId) {
+      disconnectSync();
+    }
+  }, [user, syncUserId, initSync, disconnectSync]);
+
   const monthTxs = useMemo(() => txInMonth(transactions, month), [transactions, month]);
   const totals = useMemo(() => totalsByKind(monthTxs), [monthTxs]);
+
+  // Publish budget context for the global ChatLauncher.
+  const setChatContext = useChatContextStore((s) => s.setContext);
+  const clearChatContext = useChatContextStore((s) => s.clearContext);
+  const categories = useMoneyStore((s) => s.categories);
+  const accounts = useMoneyStore((s) => s.accounts);
+  useEffect(() => {
+    setChatContext("budget", {
+      month,
+      monthSummary: totals as unknown as Record<string, unknown>,
+      categories: categories.map((c) => ({ label: c.label, kind: c.kind })),
+      accounts: accounts.map((a) => ({ name: a.name, type: a.type })),
+    });
+    return () => clearChatContext("budget");
+  }, [month, totals, categories, accounts, setChatContext, clearChatContext]);
 
   return (
     <div className="w-full max-w-4xl mx-auto pb-24">
@@ -90,12 +121,14 @@ export function MoneyPage() {
             </button>
           )}
         </div>
-        <button
-          onClick={() => setMonth(nextMonth(month))}
-          className="p-2.5 rounded-lg hover:bg-muted/30 transition-colors text-muted-foreground hover:text-foreground"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setMonth(nextMonth(month))}
+            className="p-2.5 rounded-lg hover:bg-muted/30 transition-colors text-muted-foreground hover:text-foreground"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* View tabs */}
@@ -179,13 +212,24 @@ export function MoneyPage() {
       </AnimatePresence>
 
       {/* FAB */}
-      <button
-        onClick={() => { setEditTxId(null); setAddOpen(true); }}
-        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
-        aria-label="Add transaction"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
+      {user ? (
+        <button
+          onClick={() => { setEditTxId(null); setAddOpen(true); }}
+          className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
+          aria-label="Add transaction"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      ) : (
+        <button
+          onClick={() => router.push("/auth/login")}
+          className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40 flex items-center gap-2 h-12 px-4 rounded-full bg-muted text-muted-foreground border border-border shadow hover:bg-muted/70 transition-colors"
+          aria-label="Sign in to add transactions"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="text-xs font-medium">Sign in to add</span>
+        </button>
+      )}
 
       <AddTransactionSheet
         open={addOpen}

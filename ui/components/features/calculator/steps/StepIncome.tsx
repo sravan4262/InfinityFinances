@@ -7,7 +7,8 @@ import {
   DollarSign, TrendingUp, ShoppingCart, Plus, Trash2,
   ChevronDown, ChevronRight, PiggyBank,
 } from "lucide-react";
-import { formatPct } from "@/lib/utils";
+import { formatCurrency, formatPct } from "@/lib/utils";
+import { getFireCurrency } from "@/lib/currency";
 import type { SavingsStream, FireInputs } from "@/lib/engine/types";
 
 type Person = "you" | "spouse";
@@ -66,6 +67,8 @@ export function StepIncome() {
 
   const activeInputs: FireInputs = includeSpouse && person === "spouse" ? spouseInputs : inputs;
   const activeUpdate = includeSpouse && person === "spouse" ? updateSpouseInputs : updateInputs;
+  const currency = inputs.currency ?? "USD";
+  const currencySymbol = getFireCurrency(currency).symbol;
 
   const savingsRate =
     activeInputs.afterTaxIncome > 0
@@ -129,7 +132,7 @@ export function StepIncome() {
           icon={<DollarSign className="w-4 h-4" />}
           value={activeInputs.grossIncome}
           onChange={(v) => activeUpdate({ grossIncome: v })}
-          prefix="$"
+          prefix={currencySymbol}
           format="currency"
           placeholder="e.g. 120,000"
           hint="Before taxes and deductions"
@@ -139,7 +142,7 @@ export function StepIncome() {
           icon={<DollarSign className="w-4 h-4" />}
           value={activeInputs.afterTaxIncome}
           onChange={(v) => activeUpdate({ afterTaxIncome: v })}
-          prefix="$"
+          prefix={currencySymbol}
           format="currency"
           placeholder="e.g. 90,000"
           hint="Take-home pay you actually receive"
@@ -150,7 +153,7 @@ export function StepIncome() {
           icon={<ShoppingCart className="w-4 h-4" />}
           value={activeInputs.currentSpending}
           onChange={(v) => activeUpdate({ currentSpending: v })}
-          prefix="$"
+          prefix={currencySymbol}
           format="currency"
           placeholder="e.g. 60,000"
           hint={isSpouse ? "Spouse's individual spending; combined uses your household total" : "What you actually spend each year"}
@@ -194,13 +197,13 @@ export function StepIncome() {
           <p className="text-muted-foreground text-xs">
             {isSpouse ? "Spouse saves" : "You save"}{" "}
             <span className="text-foreground font-medium">
-              ${Math.max(0, annualSavings).toLocaleString()}
+              {formatCurrency(Math.max(0, annualSavings), false, currency)}
             </span>{" "}
             per year
             {totalStreams > 0 && (
               <> +{" "}
                 <span className="text-primary font-medium">
-                  ${(totalStreams * 12).toLocaleString()}
+                  {formatCurrency(totalStreams * 12, false, currency)}
                 </span>{" "}
                 from streams
               </>
@@ -247,7 +250,7 @@ export function StepIncome() {
                   label="Monthly amount"
                   value={stream.monthlyAmount}
                   onChange={(v) => updateStream(idx, { monthlyAmount: v })}
-                  prefix="$"
+                  prefix={currencySymbol}
                   format="currency"
                 />
                 <NumberField

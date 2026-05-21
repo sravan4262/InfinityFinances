@@ -5,6 +5,5 @@ if (!connectionString) {
   throw new Error("DATABASE_URL must be set");
 }
 
-export const sql = postgres(connectionString, {
-  connection: { search_path: "fire" },
-});
+// All table references in routes are schema-qualified (retirement.*, home.*, budget.*, chat.*).
+export const sql = postgres(connectionString);

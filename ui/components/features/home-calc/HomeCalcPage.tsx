@@ -7,6 +7,7 @@ import { BreakEvenCalc } from "./BreakEvenCalc";
 import { MortgageCalc } from "./MortgageCalc";
 import { AffordabilityCalc } from "./AffordabilityCalc";
 import { BuyingGuide } from "./BuyingGuide";
+import { useChatContextStore } from "@/lib/chatContextStore";
 import type { BreakEvenInputs, MortgageInputs, AffordabilityInputs } from "./lib/types";
 
 type SubTab = "break-even" | "mortgage" | "affordability" | "guide";
@@ -43,6 +44,19 @@ export function HomeCalcPage() {
       setUserId(data.session?.user.id ?? null);
     });
   }, []);
+
+  // Publish current home-calc inputs to the global chat context so the
+  // single ChatLauncher in app/layout can pick them up.
+  const setChatContext = useChatContextStore((s) => s.setContext);
+  const clearChatContext = useChatContextStore((s) => s.clearContext);
+  useEffect(() => {
+    const payload: Record<string, unknown> = { activeTab };
+    if (breakEvenInputs) payload.breakEven = breakEvenInputs as unknown as Record<string, unknown>;
+    if (mortgageInputs) payload.mortgage = mortgageInputs as unknown as Record<string, unknown>;
+    if (affordabilityInputs) payload.affordability = affordabilityInputs as unknown as Record<string, unknown>;
+    setChatContext("home", payload);
+    return () => clearChatContext("home");
+  }, [activeTab, breakEvenInputs, mortgageInputs, affordabilityInputs, setChatContext, clearChatContext]);
 
   // Load profiles when logged in
   useEffect(() => {
@@ -131,7 +145,7 @@ export function HomeCalcPage() {
           </p>
         </div>
 
-        {/* Save / profile controls (logged-in only) */}
+        {/* Save / profile controls */}
         {userId && (
           <div className="flex items-center gap-2 shrink-0">
             {/* Profile picker */}

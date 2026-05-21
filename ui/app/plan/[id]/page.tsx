@@ -43,7 +43,7 @@ export default async function SharedPlanPage({ params }: Props) {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
             <Flame className="w-5 h-5 text-primary" />
-            <span className="font-semibold text-sm">FIREcalc</span>
+            <span className="font-semibold text-sm">Infinity Finances</span>
           </div>
           <h1 className="text-2xl font-bold">{plan.name}</h1>
           <p className="text-sm text-muted-foreground">Shared FIRE projection</p>
@@ -79,7 +79,7 @@ export default async function SharedPlanPage({ params }: Props) {
 
         <p className="text-center text-xs text-muted-foreground">
           Calculated with{" "}
-          <a href="/" className="text-primary hover:underline">FIREcalc</a>
+          <a href="/" className="text-primary hover:underline">Infinity Finances</a>
         </p>
       </div>
     </div>

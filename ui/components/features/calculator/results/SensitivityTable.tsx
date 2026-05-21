@@ -1,14 +1,15 @@
 "use client";
 import { formatCurrency } from "@/lib/utils";
-import type { RetirementSensitivityRow } from "@/lib/engine/types";
+import type { FireCurrency, RetirementSensitivityRow } from "@/lib/engine/types";
 import { cn } from "@/lib/utils";
 
 interface Props {
   rows: RetirementSensitivityRow[];
   plannedRetirementAge: number;
+  currency?: FireCurrency;
 }
 
-export function SensitivityTable({ rows, plannedRetirementAge }: Props) {
+export function SensitivityTable({ rows, plannedRetirementAge, currency }: Props) {
   if (!rows || rows.length === 0) return null;
 
   return (
@@ -57,22 +58,22 @@ export function SensitivityTable({ rows, plannedRetirementAge }: Props) {
                     )}
                   </td>
                   <td className="py-2.5 px-2 text-right tabular-nums">
-                    {formatCurrency(row.requiredCorpus, true)}
+                    {formatCurrency(row.requiredCorpus, true, currency)}
                   </td>
                   <td className="py-2.5 px-2 text-right tabular-nums">
-                    {formatCurrency(row.projectedPortfolio, true)}
+                    {formatCurrency(row.projectedPortfolio, true, currency)}
                   </td>
                   <td className={cn(
                     "py-2.5 px-2 text-right tabular-nums font-medium",
                     surplus ? "text-success" : "text-warning"
                   )}>
                     {surplus ? "+" : "−"}
-                    {formatCurrency(Math.abs(row.shortfall), true)}
+                    {formatCurrency(Math.abs(row.shortfall), true, currency)}
                   </td>
                   <td className="py-2.5 px-2 text-right tabular-nums text-muted-foreground">
                     {row.monthlySavingsNeeded > 1e9
                       ? "—"
-                      : formatCurrency(row.monthlySavingsNeeded, true) + "/mo"}
+                      : formatCurrency(row.monthlySavingsNeeded, true, currency) + "/mo"}
                   </td>
                 </tr>
               );

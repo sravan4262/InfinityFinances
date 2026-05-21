@@ -84,7 +84,7 @@ export function SummaryView({ month }: Props) {
                     ? "oklch(0.65 0.22 25)"
                     : pct >= 75
                     ? "oklch(0.72 0.18 50)"
-                    : "oklch(0.62 0.22 270)",
+                    : "oklch(0.68 0.15 195)",
               }}
             />
           </div>

@@ -1,6 +1,7 @@
 "use client";
 import { useFireStore, nextMonthStr, currentMonthStr } from "@/lib/store";
 import { NumberField } from "@/components/ui/NumberField";
+import { getFireCurrency } from "@/lib/currency";
 import { useState } from "react";
 import {
   ChevronDown, ChevronRight, Heart, Shield, GraduationCap,
@@ -63,6 +64,8 @@ export function StepAdvanced() {
 
   const activeInputs: FireInputs = includeSpouse && person === "spouse" ? spouseInputs : inputs;
   const activeUpdate = includeSpouse && person === "spouse" ? updateSpouseInputs : updateInputs;
+  const currency = inputs.currency ?? "USD";
+  const currencySymbol = getFireCurrency(currency).symbol;
 
   // ── EMI helpers ────────────────────────────────────────────────────────────
   const addEmi = () => {
@@ -218,7 +221,7 @@ export function StepAdvanced() {
           label="Monthly retirement salary"
           value={activeInputs.monthlyRetirementSalary ?? activeInputs.retirementSpending / 12}
           onChange={(v) => activeUpdate({ monthlyRetirementSalary: v, retirementSpending: v * 12 })}
-          prefix="$"
+          prefix={currencySymbol}
           format="currency"
           placeholder="e.g. 5,000"
           hint={
@@ -236,7 +239,7 @@ export function StepAdvanced() {
           min={0.02}
           max={0.08}
           placeholder="e.g. 4"
-          hint="% of your invested portfolio you draw each year. 4% is the classic safe rate — at that rate your corpus is ₹Annual Spending ÷ 4% = 25× your yearly expenses. Cash savings are not included."
+          hint={`% of your invested portfolio you draw each year. 4% is the classic safe rate — at that rate your corpus is ${currencySymbol}Annual Spending ÷ 4% = 25× your yearly expenses. Cash savings are not included.`}
         />
       </Section>
 
@@ -266,7 +269,7 @@ export function StepAdvanced() {
                   label="Monthly EMI"
                   value={emi.monthlyAmount}
                   onChange={(v) => updateEmi(idx, { monthlyAmount: v })}
-                  prefix="$"
+                  prefix={currencySymbol}
                   format="currency"
                 />
                 <div className="space-y-1.5">
@@ -324,7 +327,7 @@ export function StepAdvanced() {
                 label="Monthly amount"
                 value={exp.monthlyAmount}
                 onChange={(v) => updateExpense(idx, { monthlyAmount: v })}
-                prefix="$"
+                prefix={currencySymbol}
                 format="currency"
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -362,7 +365,7 @@ export function StepAdvanced() {
           label="Social Security / NPS annual benefit"
           value={activeInputs.socialSecurityBenefit ?? 0}
           onChange={(v) => activeUpdate({ socialSecurityBenefit: v })}
-          prefix="$" format="currency"
+          prefix={currencySymbol} format="currency"
           placeholder="e.g. 18,000"
           hint="Annual SS benefit at your claiming age (from ssa.gov)"
         />
@@ -377,7 +380,7 @@ export function StepAdvanced() {
           label="Pension annual benefit"
           value={activeInputs.pensionBenefit ?? 0}
           onChange={(v) => activeUpdate({ pensionBenefit: v })}
-          prefix="$" format="currency"
+          prefix={currencySymbol} format="currency"
           placeholder="e.g. 12,000"
         />
         <NumberField
@@ -395,7 +398,7 @@ export function StepAdvanced() {
           label="Annual healthcare premium (pre-Medicare)"
           value={activeInputs.healthcarePremium ?? 0}
           onChange={(v) => activeUpdate({ healthcarePremium: v })}
-          prefix="$" format="currency"
+          prefix={currencySymbol} format="currency"
           placeholder="e.g. 6,000"
           hint="ACA marketplace premiums before age 65"
         />
@@ -440,7 +443,7 @@ export function StepAdvanced() {
                     label="Annual education cost (today $)"
                     value={child.annualCostToday}
                     onChange={(v) => updateChild(idx, { annualCostToday: v })}
-                    prefix="$" format="currency"
+                    prefix={currencySymbol} format="currency"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -471,7 +474,7 @@ export function StepAdvanced() {
                       label="Monthly amount"
                       value={child.monthlyLivingExpenses ?? 0}
                       onChange={(v) => updateChild(idx, { monthlyLivingExpenses: v })}
-                      prefix="$" format="currency"
+                      prefix={currencySymbol} format="currency"
                       hint="Groceries, clothing, activities, etc."
                     />
                     <NumberField
@@ -499,7 +502,7 @@ export function StepAdvanced() {
                             label="Amount"
                             value={ote.amount}
                             onChange={(v) => updateOneTime(idx, oteIdx, { amount: v })}
-                            prefix="$" format="currency"
+                            prefix={currencySymbol} format="currency"
                           />
                           <div className="space-y-1.5">
                             <label className="text-xs text-muted-foreground">Date</label>
@@ -591,7 +594,7 @@ export function StepAdvanced() {
                   label="Asset value at purchase"
                   value={inv.investmentValue}
                   onChange={(v) => updateInvestment(idx, { investmentValue: v })}
-                  prefix="$" format="currency"
+                  prefix={currencySymbol} format="currency"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -605,7 +608,7 @@ export function StepAdvanced() {
                   label="Down payment"
                   value={inv.downPayment}
                   onChange={(v) => updateInvestment(idx, { downPayment: v })}
-                  prefix="$" format="currency"
+                  prefix={currencySymbol} format="currency"
                 />
               </div>
               <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -624,7 +627,7 @@ export function StepAdvanced() {
                     label="Monthly EMI"
                     value={inv.emiAmount}
                     onChange={(v) => updateInvestment(idx, { emiAmount: v })}
-                    prefix="$" format="currency"
+                    prefix={currencySymbol} format="currency"
                   />
                   <div className="space-y-1.5">
                     <label className="text-xs text-muted-foreground">EMI start</label>
@@ -675,7 +678,7 @@ export function StepAdvanced() {
           label="Annual Roth conversion amount"
           value={activeInputs.rothConversionAnnual ?? 0}
           onChange={(v) => activeUpdate({ rothConversionAnnual: v })}
-          prefix="$"
+          prefix={currencySymbol}
           format="currency"
           placeholder="e.g. 10,000"
           hint="Leave blank to skip. Requires Traditional account assets on the Portfolio step."

@@ -263,8 +263,8 @@ export function TrendingDashboard() {
             <ComposedChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="plannedGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="oklch(0.62 0.22 270)" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="oklch(0.62 0.22 270)" stopOpacity={0.02} />
+                  <stop offset="0%" stopColor="oklch(0.68 0.15 195)" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="oklch(0.68 0.15 195)" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.03 265 / 30%)" vertical={false} />
@@ -285,7 +285,7 @@ export function TrendingDashboard() {
                 name="Planned"
                 type="monotone"
                 dataKey="planned"
-                stroke="oklch(0.62 0.22 270)"
+                stroke="oklch(0.68 0.15 195)"
                 strokeWidth={1.5}
                 fill="url(#plannedGrad)"
                 dot={false}

@@ -1,19 +1,33 @@
 "use client";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useFireStore } from "@/lib/store";
 import { Navbar } from "@/components/layout/Navbar";
 import { FormWizard } from "@/components/features/calculator/FormWizard";
 import { SimpleCalculator } from "@/components/features/calculator/SimpleCalculator";
-import { ChatInterface } from "@/components/features/chat/ChatInterface";
 import { ResultsDashboard } from "@/components/features/calculator/results/ResultsDashboard";
 import { TrackerPage } from "@/components/features/tracker/TrackerPage";
 import { HomeCalcPage } from "@/components/features/home-calc/HomeCalcPage";
 import { MoneyPage } from "@/components/features/money/MoneyPage";
 import { ModeToggle } from "@/components/layout/ModeToggle";
+import { PlansLanding } from "@/components/features/plans/PlansLanding";
+import { plansApi, type SavedPlan } from "@/lib/api/plans";
+import { useUser } from "@/lib/hooks/useUser";
 import { Flame } from "lucide-react";
 
 export default function HomePage() {
-  const { inputMode, hasResults, activeTab } = useFireStore();
+  const { inputMode, hasResults, activeTab, calculatorView, startNewPlan, setCalculatorView } = useFireStore();
+  const { user } = useUser();
+  const [savedPlans, setSavedPlans] = useState<SavedPlan[] | null>(null);
+
+  useEffect(() => {
+    if (user === undefined) return;
+    if (!user) {
+      setSavedPlans([]);
+      return;
+    }
+    plansApi.list().then(setSavedPlans).catch(() => setSavedPlans([]));
+  }, [user, calculatorView, hasResults]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -51,6 +65,21 @@ export default function HomePage() {
             >
               <TrackerPage />
             </motion.div>
+          ) : !hasResults && calculatorView === "overview" && savedPlans && savedPlans.length > 0 ? (
+            <motion.div
+              key="plans-landing"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <PlansLanding
+                plans={savedPlans}
+                onPlansChange={setSavedPlans}
+                onEdit={() => setCalculatorView("editor")}
+                onStartNew={startNewPlan}
+              />
+            </motion.div>
           ) : !hasResults ? (
             <motion.div
               key="input"
@@ -86,9 +115,7 @@ export default function HomePage() {
                 >
                   {inputMode === "simple"
                     ? "Six numbers, one answer. We'll handle the rest."
-                    : inputMode === "form"
-                    ? "Fill in your numbers and we'll calculate your FIRE date."
-                    : "Chat with our AI and we'll collect everything naturally."}
+                    : "Fill in your numbers and we'll calculate your FIRE date."}
                 </motion.p>
 
                 <motion.div
@@ -113,7 +140,7 @@ export default function HomePage() {
                   >
                     <SimpleCalculator />
                   </motion.div>
-                ) : inputMode === "form" ? (
+                ) : (
                   <motion.div
                     key="form"
                     initial={{ opacity: 0, x: -20 }}
@@ -122,16 +149,6 @@ export default function HomePage() {
                     transition={{ duration: 0.25 }}
                   >
                     <FormWizard />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="chat"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    <ChatInterface />
                   </motion.div>
                 )}
               </AnimatePresence>

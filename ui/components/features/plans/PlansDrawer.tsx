@@ -16,7 +16,8 @@ export function PlansDrawer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const { updateInputs, calculate } = useFireStore();
+  const [planToDelete, setPlanToDelete] = useState<SavedPlan | null>(null);
+  const { loadPlan, calculate } = useFireStore();
 
   const loadPlans = async () => {
     setLoading(true);
@@ -34,15 +35,19 @@ export function PlansDrawer() {
   useEffect(() => { if (open) loadPlans(); }, [open]);
 
   const handleLoad = (plan: SavedPlan) => {
-    updateInputs(plan.inputs);
+    loadPlan(plan.id, plan.name, plan.inputs);
     calculate();
     setOpen(false);
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  const handleDelete = (plan: SavedPlan, e: React.MouseEvent) => {
     e.stopPropagation();
-    await plansApi.delete(id);
-    setPlans((prev) => prev.filter((p) => p.id !== id));
+  };
+  const confirmDelete = async () => {
+    if (!planToDelete) return;
+    await plansApi.delete(planToDelete.id);
+    setPlans((prev) => prev.filter((p) => p.id !== planToDelete.id));
+    setPlanToDelete(null);
   };
 
   const handleTogglePublic = async (plan: SavedPlan, e: React.MouseEvent) => {
@@ -142,7 +147,10 @@ export function PlansDrawer() {
                             : <Lock className="w-3.5 h-3.5" />}
                         </button>
                         <button
-                          onClick={(e) => handleDelete(plan.id, e)}
+                          onClick={(e) => {
+                            handleDelete(plan, e);
+                            setPlanToDelete(plan);
+                          }}
                           className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -153,6 +161,20 @@ export function PlansDrawer() {
                 ))}
               </div>
             </motion.div>
+            {planToDelete && (
+              <div className="fixed inset-0 z-[60] grid place-items-center bg-black/60 p-4">
+                <div className="w-full max-w-md rounded-2xl border border-border bg-background p-5 space-y-4">
+                  <div>
+                    <p className="font-semibold">Delete {planToDelete.name}?</p>
+                    <p className="text-sm text-muted-foreground">This removes the saved plan permanently.</p>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button onClick={() => setPlanToDelete(null)} className="rounded-lg px-3 py-2 text-sm text-muted-foreground">Cancel</button>
+                    <button onClick={confirmDelete} className="rounded-lg bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground">Delete plan</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </AnimatePresence>

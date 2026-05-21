@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { LogIn, LogOut, User as UserIcon } from "lucide-react";
+import { signOutAndReset } from "@/lib/auth/signOutAndReset";
 
 export function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
@@ -18,10 +19,7 @@ export function AuthButton() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.refresh();
-  };
+  const handleSignOut = () => signOutAndReset(router);
 
   if (user) {
     return (

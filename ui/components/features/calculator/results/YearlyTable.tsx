@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import type { YearlyRow } from "@/lib/engine/types";
+import type { FireCurrency, YearlyRow } from "@/lib/engine/types";
 import { formatCurrency } from "@/lib/utils";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 interface YearlyTableProps {
   rows: YearlyRow[];
   fireAge: number | null;
+  currency?: FireCurrency;
 }
 
-export function YearlyTable({ rows, fireAge }: YearlyTableProps) {
+export function YearlyTable({ rows, fireAge, currency }: YearlyTableProps) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? rows : rows.slice(0, 10);
 
@@ -76,20 +77,20 @@ export function YearlyTable({ rows, fireAge }: YearlyTableProps) {
                 </td>
                 <td className="px-3 sm:px-4 py-2.5 text-right font-medium tabular-nums">
                   <span className={row.portfolio <= 0 ? "text-destructive" : "text-foreground"}>
-                    {formatCurrency(row.portfolio, true)}
+                    {formatCurrency(row.portfolio, true, currency)}
                   </span>
                 </td>
                 <td className="px-3 sm:px-4 py-2.5 text-right tabular-nums text-success">
-                  {row.annualSavings > 0 ? `+${formatCurrency(row.annualSavings, true)}` : "—"}
+                  {row.annualSavings > 0 ? `+${formatCurrency(row.annualSavings, true, currency)}` : "—"}
                 </td>
                 <td className="hidden md:table-cell px-3 sm:px-4 py-2.5 text-right tabular-nums text-muted-foreground">
-                  {formatCurrency(row.annualSpending, true)}
+                  {formatCurrency(row.annualSpending, true, currency)}
                 </td>
                 <td className={cn(
                   "px-3 sm:px-4 py-2.5 text-right tabular-nums font-medium",
                   row.fireGap >= 0 ? "text-success" : "text-muted-foreground"
                 )}>
-                  {row.fireGap >= 0 ? "✓" : formatCurrency(row.fireGap, true)}
+                  {row.fireGap >= 0 ? "✓" : formatCurrency(row.fireGap, true, currency)}
                 </td>
               </tr>
             ))}

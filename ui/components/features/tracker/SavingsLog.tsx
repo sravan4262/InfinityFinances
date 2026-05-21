@@ -34,8 +34,8 @@ function currentMonth(): string {
 }
 
 const COLORS = [
-  "oklch(0.62 0.22 270)", "oklch(0.70 0.18 200)", "oklch(0.76 0.155 75)",
-  "oklch(0.65 0.20 150)", "oklch(0.60 0.14 310)",
+  "oklch(0.68 0.15 195)", "oklch(0.70 0.18 200)", "oklch(0.76 0.155 75)",
+  "oklch(0.65 0.20 150)", "oklch(0.60 0.14 205)",
 ];
 
 export function SavingsLog() {
@@ -278,7 +278,7 @@ export function SavingsLog() {
                 background:
                   totals.actual >= totals.planned
                     ? "oklch(0.65 0.18 150)"
-                    : "oklch(0.62 0.22 270)",
+                    : "oklch(0.68 0.15 195)",
               }}
             />
           </div>

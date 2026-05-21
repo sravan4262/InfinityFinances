@@ -6,7 +6,7 @@ import { useFireStore } from "@/lib/store";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function Navbar() {
-  const { hasResults, resetInputs, activeTab, setActiveTab, wizardStep } = useFireStore();
+  const { hasResults, resetInputs, startNewPlan, activeTab, setActiveTab, wizardStep } = useFireStore();
   const isEarlyRetirement = activeTab === "calculator" || activeTab === "tracker";
 
   return (
@@ -22,7 +22,7 @@ export function Navbar() {
             <div className="absolute inset-0 rounded-lg bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
           <span className="font-semibold tracking-tight text-base">
-            FIRE<span className="text-primary">calc</span>
+            Infinity<span className="text-primary">Finances</span>
           </span>
         </button>
 
@@ -42,8 +42,8 @@ export function Navbar() {
             )}
             <span className={`relative z-10 flex items-center gap-2 text-foreground transition-opacity ${isEarlyRetirement ? "opacity-100" : "opacity-40"}`}>
               <Calculator className="w-4 h-4" />
-              <span className="hidden lg:inline">Early Retirement</span>
-              <span className="lg:hidden">Retire</span>
+              <span className="hidden lg:inline">Early Retirement Calc</span>
+              <span className="lg:hidden">Retire Calc</span>
             </span>
           </button>
 
@@ -61,8 +61,8 @@ export function Navbar() {
             )}
             <span className={`relative z-10 flex items-center gap-2 text-foreground transition-opacity ${activeTab === "home" ? "opacity-100" : "opacity-40"}`}>
               <Home className="w-4 h-4" />
-              <span className="hidden lg:inline">Home Mortgage</span>
-              <span className="lg:hidden">Home</span>
+              <span className="hidden lg:inline">Home Mortgage Calc</span>
+              <span className="lg:hidden">Home Calc</span>
             </span>
           </button>
 
@@ -80,7 +80,7 @@ export function Navbar() {
             )}
             <span className={`relative z-10 flex items-center gap-2 text-foreground transition-opacity ${activeTab === "expense" ? "opacity-100" : "opacity-40"}`}>
               <Receipt className="w-4 h-4" />
-              Expense
+              Budget Calc
             </span>
           </button>
         </div>
@@ -92,7 +92,7 @@ export function Navbar() {
               key="start-over"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              onClick={resetInputs}
+              onClick={startNewPlan}
               className="text-sm font-medium text-muted-foreground hover:text-foreground px-4 py-2 rounded-full border border-border hover:border-border/80 transition-colors"
             >
               Start over

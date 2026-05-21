@@ -1,12 +1,13 @@
 import type { Context, Next } from "hono";
 import { verifyToken } from "../lib/verifyToken.js";
+import { unauthorized } from "../lib/errors.js";
 
 export async function authMiddleware(c: Context, next: Next) {
   const authHeader = c.req.header("Authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
 
   const userId = await verifyToken(token);
-  if (!userId) return c.json({ error: "Unauthorized" }, 401);
+  if (!userId) throw unauthorized();
 
   c.set("userId", userId);
   c.set("user", { id: userId });

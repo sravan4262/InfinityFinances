@@ -7,7 +7,6 @@ Thumbs.db
 
 # Dependencies
 node_modules/
-package-lock.json
 .pnp
 .pnp.*
 .yarn/*
@@ -28,8 +27,13 @@ db/dist/
 .env
 .env.local
 .env.*.local
+.env.keys
 !.env.example
 !.env.local.example
+
+# Supabase CLI working state (created by `supabase link` / `supabase start`)
+supabase/.branches/
+supabase/.temp/
 
 # Drizzle
 db/src/migrations/*.sql

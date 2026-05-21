@@ -65,7 +65,7 @@ export function StatCard({
       transition={{ duration: 0.4, delay, ease: "easeOut" }}
       className={cn(
         "rounded-2xl border p-5 flex flex-col gap-1",
-        highlight && "border-primary/40 bg-primary/5 glow-indigo",
+        highlight && "border-primary/40 bg-primary/5 glow-primary",
         gold && "border-gold/40 bg-gold/5 glow-gold",
         !highlight && !gold && "border-border bg-card"
       )}

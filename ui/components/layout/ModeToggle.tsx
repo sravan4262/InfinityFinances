@@ -1,13 +1,12 @@
 "use client";
 import { motion } from "framer-motion";
-import { MessageSquare, LayoutDashboard, Zap } from "lucide-react";
+import { LayoutDashboard, Zap } from "lucide-react";
 import { useFireStore, type InputMode } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const modes: { id: InputMode; label: string; icon: React.ReactNode }[] = [
   { id: "simple", label: "Simple", icon: <Zap className="w-4 h-4" /> },
   { id: "form", label: "Advanced", icon: <LayoutDashboard className="w-4 h-4" /> },
-  { id: "chat", label: "Chat", icon: <MessageSquare className="w-4 h-4" /> },
 ];
 
 export function ModeToggle() {

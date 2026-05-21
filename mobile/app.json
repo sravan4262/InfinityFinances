@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Infinity Finances",
+    "slug": "infinity-finances",
+    "scheme": "infinityfinances",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.infinityfinances.mobile",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.infinityfinances.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#008c8e"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

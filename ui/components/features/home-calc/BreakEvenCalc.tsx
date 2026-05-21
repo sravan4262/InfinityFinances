@@ -166,7 +166,7 @@ export function BreakEvenCalc({ inputs: externalInputs, onInputsChange }: {
               <p className="text-xs text-muted-foreground mt-0.5">Where lines cross zero, buying starts to beat renting.</p>
             </div>
             <div className="flex items-center gap-3 text-[10px] font-semibold shrink-0 mt-0.5">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-violet-500 inline-block" />Adv. Net</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-cyan-500 inline-block" />Adv. Net</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />Basic Net</span>
             </div>
           </div>
@@ -178,8 +178,8 @@ export function BreakEvenCalc({ inputs: externalInputs, onInputsChange }: {
               >
                 <defs>
                   <linearGradient id="gradAdv" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.03} />
+                    <stop offset="5%" stopColor="#14b8c4" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#14b8c4" stopOpacity={0.03} />
                   </linearGradient>
                   <linearGradient id="gradBasic" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -215,7 +215,7 @@ export function BreakEvenCalc({ inputs: externalInputs, onInputsChange }: {
                 <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" strokeWidth={1.5} strokeDasharray="5 4"
                   label={{ value: "break-even", position: "insideTopRight", fontSize: 9, fill: "rgba(128,128,128,0.5)", dy: -6 }}
                 />
-                <Area type="monotone" dataKey="Adv. Net" stroke="#8b5cf6" strokeWidth={2.5} fill="url(#gradAdv)" dot={false} activeDot={{ r: 5, fill: "#8b5cf6", strokeWidth: 0 }} />
+                <Area type="monotone" dataKey="Adv. Net" stroke="#14b8c4" strokeWidth={2.5} fill="url(#gradAdv)" dot={false} activeDot={{ r: 5, fill: "#14b8c4", strokeWidth: 0 }} />
                 <Area type="monotone" dataKey="Basic Net" stroke="#10b981" strokeWidth={2.5} fill="url(#gradBasic)" dot={false} activeDot={{ r: 5, fill: "#10b981", strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
@@ -231,7 +231,7 @@ export function BreakEvenCalc({ inputs: externalInputs, onInputsChange }: {
             <div className="flex items-center gap-3 text-[10px] font-semibold">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-500 inline-block" />Cost</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />Gain</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-violet-500 inline-block" />Advanced</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-cyan-500 inline-block" />Advanced</span>
             </div>
           </div>
 
@@ -246,7 +246,7 @@ export function BreakEvenCalc({ inputs: externalInputs, onInputsChange }: {
                   <th className="px-3 py-3 text-right text-red-500">Interest Paid</th>
                   <th className="px-3 py-3 text-right text-red-500">Tax+Ins+Maint+HOA</th>
                   <th className="px-3 py-3 text-right text-emerald-600">Cash Back</th>
-                  <th className="px-3 py-3 text-right text-violet-500">Rent Saved</th>
+                  <th className="px-3 py-3 text-right text-cyan-600">Rent Saved</th>
                   <th className="px-3 py-3 text-right text-red-500">Opp. Cost</th>
                   <th className="px-3 py-3 text-right font-bold">Basic Net</th>
                   <th className="px-3 py-3 text-right font-bold">Adv. Net</th>
@@ -262,7 +262,7 @@ export function BreakEvenCalc({ inputs: externalInputs, onInputsChange }: {
                     <td className="px-3 py-2.5 text-right font-mono text-red-500">{fmt$(r.interestPaid)}</td>
                     <td className="px-3 py-2.5 text-right font-mono text-red-500">{fmt$(r.otherCosts)}</td>
                     <td className="px-3 py-2.5 text-right font-mono text-emerald-600">{fmt$(r.cashBack)}</td>
-                    <td className="px-3 py-2.5 text-right font-mono text-violet-500">{fmt$(r.rentSaved)}</td>
+                    <td className="px-3 py-2.5 text-right font-mono text-cyan-600">{fmt$(r.rentSaved)}</td>
                     <td className="px-3 py-2.5 text-right font-mono text-red-500">{fmt$(r.oppCost)}</td>
                     <td className={`px-3 py-2.5 text-right font-mono font-bold ${r.basicNet >= 0 ? "text-emerald-600 bg-emerald-500/10" : "text-red-500 bg-red-500/10"}`}>
                       {fmtSigned(r.basicNet)}
@@ -285,7 +285,7 @@ export function BreakEvenCalc({ inputs: externalInputs, onInputsChange }: {
               <li><span className="font-medium text-red-500">Interest Paid</span> — Cumulative mortgage interest paid to this point.</li>
               <li><span className="font-medium text-red-500">Tax+Ins+Maint+HOA</span> — Cumulative annual ownership costs.</li>
               <li><span className="font-medium text-emerald-600">Cash Back</span> — Sale proceeds minus loan payoff and selling costs.</li>
-              <li><span className="font-medium text-violet-500">Rent Saved</span> — Total rent you avoided by owning instead of renting.</li>
+              <li><span className="font-medium text-cyan-600">Rent Saved</span> — Total rent you avoided by owning instead of renting.</li>
               <li><span className="font-medium text-red-500">Opp. Cost</span> — What your down payment could have grown to in the stock market.</li>
               <li><span className="font-medium text-foreground">Basic Net</span> — Cash Back minus all house costs vs. your initial investment. Positive = buying paid off.</li>
               <li><span className="font-medium text-foreground">Adv. Net</span> — Basic Net plus rent saved and tax benefit, minus opportunity cost. The full picture.</li>

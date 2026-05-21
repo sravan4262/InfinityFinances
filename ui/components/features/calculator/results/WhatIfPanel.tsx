@@ -4,7 +4,7 @@ import { Slider } from "@/components/ui/slider";
 import { formatCurrency, formatPct } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { calculateFireMonthly } from "@/lib/engine/monthly";
-import type { FireInputs, FireResults } from "@/lib/engine/types";
+import type { FireCurrency, FireInputs, FireResults } from "@/lib/engine/types";
 import { RotateCcw, Zap } from "lucide-react";
 
 interface Props {
@@ -19,12 +19,14 @@ function Delta({
   override,
   format = "currency",
   higherIsBetter = true,
+  currency,
 }: {
   label: string;
   base: number | null;
   override: number | null;
   format?: "currency" | "age" | "years";
   higherIsBetter?: boolean;
+  currency?: FireCurrency;
 }) {
   if (base === null || override === null) return null;
   const diff = override - base;
@@ -32,7 +34,7 @@ function Delta({
   const neutral = Math.abs(diff) < 0.05;
 
   const fmt = (v: number) => {
-    if (format === "currency") return formatCurrency(v, true);
+    if (format === "currency") return formatCurrency(v, true, currency);
     if (format === "age") return `Age ${v.toFixed(1)}`;
     return `${v.toFixed(1)} yrs`;
   };
@@ -56,7 +58,7 @@ function Delta({
           )}>
             ({diff > 0 ? "+" : ""}
             {format === "currency"
-              ? formatCurrency(diff, true)
+              ? formatCurrency(diff, true, currency)
               : diff.toFixed(1)}
             )
           </span>
@@ -67,6 +69,7 @@ function Delta({
 }
 
 export function WhatIfPanel({ baseInputs, baseResults, onWhatIfChange }: Props) {
+  const currency = baseInputs.currency ?? "USD";
   const baseMonthlyRetirementSalary =
     baseInputs.monthlyRetirementSalary ?? baseInputs.retirementSpending / 12;
   const baseMonthlySavings = (baseInputs.afterTaxIncome - baseInputs.currentSpending) / 12;
@@ -212,7 +215,7 @@ export function WhatIfPanel({ baseInputs, baseResults, onWhatIfChange }: Props) 
                 ? spending < baseMonthlyRetirementSalary ? "text-success" : "text-destructive"
                 : "text-foreground"
             )}>
-              {formatCurrency(spending, true)}/mo
+              {formatCurrency(spending, true, currency)}/mo
             </span>
           </div>
           <Slider
@@ -224,7 +227,7 @@ export function WhatIfPanel({ baseInputs, baseResults, onWhatIfChange }: Props) 
           />
           <div className="flex justify-between text-[10px] text-muted-foreground/50">
             <span>40%</span>
-            <span>Base: {formatCurrency(baseMonthlyRetirementSalary, true)}/mo</span>
+            <span>Base: {formatCurrency(baseMonthlyRetirementSalary, true, currency)}/mo</span>
             <span>200%</span>
           </div>
         </div>
@@ -239,7 +242,7 @@ export function WhatIfPanel({ baseInputs, baseResults, onWhatIfChange }: Props) 
                 ? savings > Math.max(0, baseMonthlySavings) ? "text-success" : "text-destructive"
                 : "text-foreground"
             )}>
-              {formatCurrency(savings, true)}/mo
+              {formatCurrency(savings, true, currency)}/mo
             </span>
           </div>
           <Slider
@@ -250,9 +253,9 @@ export function WhatIfPanel({ baseInputs, baseResults, onWhatIfChange }: Props) 
             step={100}
           />
           <div className="flex justify-between text-[10px] text-muted-foreground/50">
-            <span>$0</span>
-            <span>Base: {formatCurrency(Math.max(0, baseMonthlySavings), true)}/mo</span>
-            <span>{formatCurrency(maxSavings, true)}</span>
+            <span>{formatCurrency(0, true, currency)}</span>
+            <span>Base: {formatCurrency(Math.max(0, baseMonthlySavings), true, currency)}/mo</span>
+            <span>{formatCurrency(maxSavings, true, currency)}</span>
           </div>
         </div>
       </div>
@@ -267,6 +270,7 @@ export function WhatIfPanel({ baseInputs, baseResults, onWhatIfChange }: Props) 
             override={whatIfResults.fireNumber}
             format="currency"
             higherIsBetter={false}
+            currency={currency}
           />
           <Delta
             label="FIRE age"
@@ -288,6 +292,7 @@ export function WhatIfPanel({ baseInputs, baseResults, onWhatIfChange }: Props) 
             override={whatIfResults.requiredCorpusPV}
             format="currency"
             higherIsBetter={false}
+            currency={currency}
           />
           <Delta
             label="Money lasts until"

@@ -11,6 +11,7 @@ import { StepScenarios } from "./steps/StepScenarios";
 import { cn } from "@/lib/utils";
 import { ChevronRight, ChevronLeft, Flame } from "lucide-react";
 import { LivePreviewPanel } from "./LivePreviewPanel";
+import { CurrencySelector } from "./CurrencySelector";
 
 const STEPS: { label: string; shortLabel: string }[] = [
   { label: "You", shortLabel: "You" },
@@ -89,6 +90,9 @@ export function FormWizard() {
     <div className="w-full max-w-5xl mx-auto lg:grid lg:grid-cols-[1fr_340px] lg:gap-8 lg:items-start">
       {/* Left: form */}
       <div>
+        <div className="mb-4">
+          <CurrencySelector />
+        </div>
         {/* Step indicators */}
         <div className="flex items-center gap-1.5 mb-8 justify-center">
           {STEPS.map((step, i) => (
@@ -171,7 +175,7 @@ export function FormWizard() {
                 className={cn(
                   "flex items-center gap-1.5 text-sm px-5 py-2 rounded-lg font-medium transition-all",
                   isLast
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-indigo"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 glow-primary"
                     : "bg-muted hover:bg-muted/80 text-foreground"
                 )}
               >

@@ -1,7 +1,7 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
-import type { MonteCarloResults, HistoricalSequenceResult } from "@/lib/engine/types";
+import type { FireCurrency, MonteCarloResults, HistoricalSequenceResult } from "@/lib/engine/types";
 import { AlertTriangle, CheckCircle2, TrendingDown, Shuffle } from "lucide-react";
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
   historicalResults: HistoricalSequenceResult[];
   retirementAge: number;
   lifeExpectancy: number;
+  currency?: FireCurrency;
 }
 
 // ── Success rate ring ─────────────────────────────────────────────────────────
@@ -88,10 +89,12 @@ function HistoricalTable({
   results,
   lifeExpectancy,
   retirementAge,
+  currency,
 }: {
   results: HistoricalSequenceResult[];
   lifeExpectancy: number;
   retirementAge: number;
+  currency?: FireCurrency;
 }) {
   return (
     <div className="space-y-2">
@@ -126,7 +129,7 @@ function HistoricalTable({
               )}
             </div>
             <p className="text-xs tabular-nums text-right font-medium">
-              {r.survived ? formatCurrency(r.portfolioAtEnd, true) : "—"}
+              {r.survived ? formatCurrency(r.portfolioAtEnd, true, currency) : "—"}
             </p>
             <p className={cn(
               "text-xs tabular-nums text-right",
@@ -148,6 +151,7 @@ export function MonteCarloPanel({
   historicalResults,
   retirementAge,
   lifeExpectancy,
+  currency,
 }: Props) {
   const successPct = Math.round(mc.successRate * 100);
   const retRow = mc.percentileRows.find((r) => r.age >= retirementAge);
@@ -174,19 +178,19 @@ export function MonteCarloPanel({
             <div className="rounded-lg bg-muted/20 p-2.5">
               <p className="text-muted-foreground mb-0.5">Median at retirement</p>
               <p className="font-semibold tabular-nums text-sm">
-                {retRow ? formatCurrency(retRow.p50, true) : "—"}
+                {retRow ? formatCurrency(retRow.p50, true, currency) : "—"}
               </p>
             </div>
             <div className="rounded-lg bg-muted/20 p-2.5">
               <p className="text-muted-foreground mb-0.5">p10 at retirement</p>
               <p className="font-semibold tabular-nums text-sm text-destructive/80">
-                {retRow ? formatCurrency(retRow.p10, true) : "—"}
+                {retRow ? formatCurrency(retRow.p10, true, currency) : "—"}
               </p>
             </div>
             <div className="rounded-lg bg-muted/20 p-2.5">
               <p className="text-muted-foreground mb-0.5">Median end of life</p>
               <p className="font-semibold tabular-nums text-sm">
-                {endRow ? formatCurrency(endRow.p50, true) : "—"}
+                {endRow ? formatCurrency(endRow.p50, true, currency) : "—"}
               </p>
             </div>
             <div className="rounded-lg bg-muted/20 p-2.5">
@@ -255,6 +259,7 @@ export function MonteCarloPanel({
         results={historicalResults}
         lifeExpectancy={lifeExpectancy}
         retirementAge={retirementAge}
+        currency={currency}
       />
     </div>
   );

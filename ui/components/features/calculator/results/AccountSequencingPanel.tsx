@@ -10,7 +10,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import type { AccountSequencingResult } from "@/lib/engine/types";
+import type { AccountSequencingResult, FireCurrency } from "@/lib/engine/types";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight, Shield, AlertTriangle, ArrowRightLeft, Clock } from "lucide-react";
@@ -18,6 +18,7 @@ import { ChevronDown, ChevronRight, Shield, AlertTriangle, ArrowRightLeft, Clock
 interface Props {
   seq: AccountSequencingResult;
   retirementAge: number;
+  currency?: FireCurrency;
 }
 
 function InfoRow({ label, value, sub, accent }: {
@@ -44,7 +45,7 @@ function InfoRow({ label, value, sub, accent }: {
   );
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+function CustomTooltip({ active, payload, label, currency }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="glass rounded-xl p-3 text-xs space-y-1.5 shadow-xl">
@@ -53,7 +54,7 @@ function CustomTooltip({ active, payload, label }: any) {
         <div key={p.dataKey} className="flex justify-between gap-6">
           <span className="text-muted-foreground">{p.name}</span>
           <span className="font-medium" style={{ color: p.fill }}>
-            {formatCurrency(p.value, true)}
+            {formatCurrency(p.value, true, currency)}
           </span>
         </div>
       ))}
@@ -61,7 +62,7 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
-export function AccountSequencingPanel({ seq, retirementAge }: Props) {
+export function AccountSequencingPanel({ seq, retirementAge, currency }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   const totalAtRetirement =
@@ -112,7 +113,7 @@ export function AccountSequencingPanel({ seq, retirementAge }: Props) {
               </p>
               <div className="grid grid-cols-3 gap-2 min-w-0">
                 {[
-                  { label: "Taxable", value: seq.taxableAtRetirement, color: "oklch(0.62 0.22 270)", bg: "bg-primary/10 text-primary" },
+                  { label: "Taxable", value: seq.taxableAtRetirement, color: "oklch(0.68 0.15 195)", bg: "bg-primary/10 text-primary" },
                   { label: "Roth",    value: seq.rothAtRetirement,    color: "oklch(0.65 0.18 150)", bg: "bg-success/10 text-success" },
                   { label: "Traditional", value: seq.traditionalAtRetirement, color: "oklch(0.76 0.155 75)", bg: "bg-gold/10 text-gold" },
                 ].map((bucket) => (
@@ -121,7 +122,7 @@ export function AccountSequencingPanel({ seq, retirementAge }: Props) {
                       {bucket.label}
                     </p>
                     <p className="text-sm font-bold tabular-nums mt-1">
-                      {formatCurrency(bucket.value, true)}
+                      {formatCurrency(bucket.value, true, currency)}
                     </p>
                     {totalAtRetirement > 0 && (
                       <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -171,7 +172,7 @@ export function AccountSequencingPanel({ seq, retirementAge }: Props) {
               {hasEarlyPenalty && (
                 <InfoRow
                   label="Early withdrawal penalties"
-                  value={formatCurrency(seq.earlyPenaltyTotal, true)}
+                  value={formatCurrency(seq.earlyPenaltyTotal, true, currency)}
                   sub="10% penalty on Traditional accessed before age 59½"
                   accent="warning"
                 />
@@ -196,7 +197,7 @@ export function AccountSequencingPanel({ seq, retirementAge }: Props) {
               <AlertTriangle className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
               <p className="text-xs text-muted-foreground">
                 <span className="text-warning font-medium">Early penalty detected.</span>{" "}
-                {formatCurrency(seq.earlyPenaltyTotal, true)} in 10% penalties from accessing
+                {formatCurrency(seq.earlyPenaltyTotal, true, currency)} in 10% penalties from accessing
                 Traditional accounts before age 59½. Increase taxable or Roth assets to avoid this.
               </p>
             </div>
@@ -226,10 +227,10 @@ export function AccountSequencingPanel({ seq, retirementAge }: Props) {
                 <BarChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.03 265 / 30%)" vertical={false} />
                   <XAxis dataKey="age" tick={{ fill: "oklch(0.55 0.02 265)", fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "oklch(0.55 0.02 265)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatCurrency(v, true)} width={52} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <YAxis tick={{ fill: "oklch(0.55 0.02 265)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => formatCurrency(v, true, currency)} width={52} />
+                  <Tooltip content={<CustomTooltip currency={currency} />} />
                   <Legend wrapperStyle={{ fontSize: 11, color: "oklch(0.55 0.02 265)" }} />
-                  <Bar dataKey="Taxable"     stackId="a" fill="oklch(0.62 0.22 270)" radius={[0,0,0,0]} />
+                  <Bar dataKey="Taxable"     stackId="a" fill="oklch(0.68 0.15 195)" radius={[0,0,0,0]} />
                   <Bar dataKey="Roth basis"  stackId="a" fill="oklch(0.65 0.18 150)" radius={[0,0,0,0]} />
                   <Bar dataKey="Traditional" stackId="a" fill="oklch(0.76 0.155 75)" radius={[4,4,0,0]} />
                 </BarChart>

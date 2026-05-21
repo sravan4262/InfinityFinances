@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import type { FireResults } from "@/lib/engine/types";
+import type { FireCurrency, FireResults } from "@/lib/engine/types";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +8,7 @@ interface FireVariantsProps {
   results: FireResults;
   currentAge: number;
   realAnnualReturn: number; // needed for free-coast projection
+  currency?: FireCurrency;
 }
 
 const STANDARD_VARIANTS = [
@@ -50,7 +51,7 @@ const STANDARD_VARIANTS = [
   },
 ];
 
-export function FireVariants({ results, currentAge, realAnnualReturn }: FireVariantsProps) {
+export function FireVariants({ results, currentAge, realAnnualReturn, currency }: FireVariantsProps) {
   const coastProgress = results.coastFireNumber > 0
     ? Math.min(1, (results.yearlyRows[0]?.portfolio ?? 0) / results.coastFireNumber)
     : 0;
@@ -95,7 +96,7 @@ export function FireVariants({ results, currentAge, realAnnualReturn }: FireVari
             className={cn(
               "rounded-xl border p-3.5",
               border, bg,
-              highlight && "glow-indigo"
+              highlight && "glow-primary"
             )}
           >
             <div className="flex items-center gap-1.5 mb-1">
@@ -103,7 +104,7 @@ export function FireVariants({ results, currentAge, realAnnualReturn }: FireVari
               <p className="text-xs text-muted-foreground">{label}</p>
             </div>
             <p className={cn("text-lg font-bold tabular-nums leading-tight", color)}>
-              {formatCurrency(getFireNumber(key), true)}
+              {formatCurrency(getFireNumber(key), true, currency)}
             </p>
             <p className="text-[10px] text-muted-foreground mt-1 leading-snug">{description}</p>
           </motion.div>
@@ -119,8 +120,8 @@ export function FireVariants({ results, currentAge, realAnnualReturn }: FireVari
       >
         <span className="text-foreground font-medium">Barista FIRE</span> — semi-retire with part-time work covering ~40% of expenses.
         Your portfolio only needs to fund the remaining 60%, so the target is{" "}
-        <span className="text-foreground font-medium">{formatCurrency(results.baristaFireNumber, true)}</span> vs the full{" "}
-        <span className="text-foreground font-medium">{formatCurrency(results.fireNumber, true)}</span>.
+        <span className="text-foreground font-medium">{formatCurrency(results.baristaFireNumber, true, currency)}</span> vs the full{" "}
+        <span className="text-foreground font-medium">{formatCurrency(results.fireNumber, true, currency)}</span>.
       </motion.div>
 
       {/* Coast FIRE — improved */}
@@ -151,7 +152,7 @@ export function FireVariants({ results, currentAge, realAnnualReturn }: FireVari
                 <p className="text-xs text-muted-foreground">
                   Target:{" "}
                   <span className="text-foreground font-medium">
-                    {formatCurrency(results.coastFireNumber, true)}
+                    {formatCurrency(results.coastFireNumber, true, currency)}
                   </span>
                   {yearsUntilCoast !== null && (
                     <span className="ml-2 text-primary">
@@ -186,7 +187,7 @@ export function FireVariants({ results, currentAge, realAnnualReturn }: FireVari
                   ? "oklch(0.65 0.18 150)"
                   : coastProgress >= 0.7
                   ? "oklch(0.76 0.155 75)"
-                  : "oklch(0.62 0.22 270)",
+                  : "oklch(0.68 0.15 195)",
               }}
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(100, coastProgress * 100)}%` }}
@@ -195,8 +196,8 @@ export function FireVariants({ results, currentAge, realAnnualReturn }: FireVari
           </div>
           {results.coastFireAchievedAge === null && (
             <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>{formatCurrency(results.yearlyRows[0]?.portfolio ?? 0, true)} today</span>
-              <span>{formatCurrency(results.coastFireNumber, true)} coast target</span>
+              <span>{formatCurrency(results.yearlyRows[0]?.portfolio ?? 0, true, currency)} today</span>
+              <span>{formatCurrency(results.coastFireNumber, true, currency)} coast target</span>
             </div>
           )}
         </div>

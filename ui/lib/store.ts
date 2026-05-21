@@ -4,9 +4,10 @@ import type { FireInputs, FireResults } from "./engine/types";
 import { calculateFireMonthly } from "./engine/monthly";
 import { mergeInputs } from "./engine/merge";
 
-export type InputMode = "simple" | "form" | "chat";
+export type InputMode = "simple" | "form";
 export type WizardStep = 0 | 1 | 2 | 3 | 4;
 export type AppTab = "calculator" | "tracker" | "home" | "expense";
+export type CalculatorView = "overview" | "editor";
 
 export function nextMonthStr(): string {
   const d = new Date();
@@ -20,6 +21,7 @@ export function currentMonthStr(): string {
 }
 
 const DEFAULT_INPUTS: FireInputs = {
+  currency: "USD",
   currentAge: 0,
   retirementAge: 0,
   lifeExpectancy: 0,
@@ -59,6 +61,8 @@ const DEFAULT_INPUTS: FireInputs = {
 interface FireStore {
   activeTab: AppTab;
   setActiveTab: (tab: AppTab) => void;
+  calculatorView: CalculatorView;
+  setCalculatorView: (view: CalculatorView) => void;
 
   inputMode: InputMode;
   setInputMode: (mode: InputMode) => void;
@@ -67,8 +71,14 @@ interface FireStore {
   setWizardStep: (step: WizardStep) => void;
 
   inputs: FireInputs;
+  activePlanId: string | null;
+  activePlanName: string | null;
   updateInputs: (partial: Partial<FireInputs>) => void;
+  loadPlan: (id: string, name: string, inputs: FireInputs) => void;
+  clearActivePlan: () => void;
   resetInputs: () => void;
+  startNewPlan: () => void;
+  reset: () => void;
 
   // Spouse
   includeSpouse: boolean;
@@ -94,6 +104,8 @@ interface FireStore {
 export const useFireStore = create<FireStore>((set, get) => ({
   activeTab: "calculator",
   setActiveTab: (tab) => set({ activeTab: tab }),
+  calculatorView: "overview",
+  setCalculatorView: (calculatorView) => set({ calculatorView }),
 
   inputMode: "simple",
   setInputMode: (mode) => set({ inputMode: mode }),
@@ -102,6 +114,8 @@ export const useFireStore = create<FireStore>((set, get) => ({
   setWizardStep: (step) => set({ wizardStep: step }),
 
   inputs: DEFAULT_INPUTS,
+  activePlanId: null,
+  activePlanName: null,
   updateInputs: (partial) => {
     set((s) => ({ inputs: { ...s.inputs, ...partial } }));
   },
@@ -114,6 +128,51 @@ export const useFireStore = create<FireStore>((set, get) => ({
     unifiedResults: null,
     hasResults: false,
     wizardStep: 0,
+    activePlanId: null,
+    activePlanName: null,
+    calculatorView: "overview",
+  }),
+  startNewPlan: () => set({
+    inputs: DEFAULT_INPUTS,
+    spouseInputs: DEFAULT_INPUTS,
+    includeSpouse: false,
+    results: null,
+    spouseResults: null,
+    unifiedResults: null,
+    hasResults: false,
+    wizardStep: 0,
+    activePlanId: null,
+    activePlanName: null,
+    calculatorView: "editor",
+  }),
+  loadPlan: (id, name, inputs) => set({
+    inputs,
+    activePlanId: id,
+    activePlanName: name,
+    results: null,
+    spouseResults: null,
+    unifiedResults: null,
+    hasResults: false,
+    calculatorView: "editor",
+  }),
+  clearActivePlan: () => set({ activePlanId: null, activePlanName: null }),
+  reset: () => set({
+    activeTab: "calculator",
+    calculatorView: "overview",
+    inputMode: "simple",
+    wizardStep: 0,
+    inputs: DEFAULT_INPUTS,
+    spouseInputs: DEFAULT_INPUTS,
+    includeSpouse: false,
+    activePlanId: null,
+    activePlanName: null,
+    results: null,
+    spouseResults: null,
+    unifiedResults: null,
+    hasResults: false,
+    previewPerson: "you",
+    chatCollectedFields: new Set(),
+    chatReady: false,
   }),
 
   // Spouse state
@@ -147,7 +206,7 @@ export const useFireStore = create<FireStore>((set, get) => ({
       set({ results, spouseResults: null, unifiedResults: null, hasResults: true });
     }
   },
-  editInputs: () => set({ hasResults: false }),
+  editInputs: () => set({ hasResults: false, calculatorView: "editor" }),
 
   previewPerson: "you",
   setPreviewPerson: (p) => set({ previewPerson: p }),
@@ -158,7 +217,7 @@ export const useFireStore = create<FireStore>((set, get) => ({
       const next = new Set(s.chatCollectedFields);
       next.add(field);
       const requiredFields = [
-        "currentAge", "retirementAge", "afterTaxIncome",
+        "currency", "currentAge", "retirementAge", "afterTaxIncome",
         "currentSpending", "currentPortfolio", "retirementSpending",
         "expectedReturn",
       ];

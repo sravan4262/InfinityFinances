@@ -131,7 +131,7 @@ export function MortgageCalc({ inputs: externalInputs, onInputsChange }: {
             <div className="flex items-center gap-3 text-[10px] font-semibold shrink-0 mt-0.5">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-red-500 inline-block" />Interest</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-emerald-500 inline-block" />Principal</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-indigo-400 inline-block" />Balance</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-cyan-400 inline-block" />Balance</span>
             </div>
           </div>
           <div className="px-2 py-4">

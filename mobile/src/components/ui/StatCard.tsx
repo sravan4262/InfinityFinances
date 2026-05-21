@@ -1,0 +1,6 @@
+import type { ReactNode } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { useTheme } from "@/theme/ThemeProvider";
+interface StatCardProps { label:string; value:string; sub?:string; icon?:ReactNode; highlight?:boolean; }
+export function StatCard({label,value,sub,icon,highlight}:StatCardProps){ const {colors}=useTheme(); const styles=makeStyles(colors); return <View style={[styles.card,highlight?styles.highlight:null]}><View style={styles.labelRow}>{icon}<Text style={styles.label}>{label}</Text></View><Text style={[styles.value,highlight?styles.highlightValue:null]}>{value}</Text>{sub?<Text style={styles.sub}>{sub}</Text>:null}</View>; }
+const makeStyles=(colors:ReturnType<typeof useTheme>["colors"])=>StyleSheet.create({card:{flex:1,minHeight:96,borderRadius:12,borderWidth:1,borderColor:colors.border,backgroundColor:colors.card,padding:14},highlight:{borderColor:colors.primary,backgroundColor:colors.primaryWash},labelRow:{flexDirection:"row",alignItems:"center",gap:6},label:{color:colors.mutedForeground,fontSize:10,fontWeight:"800",textTransform:"uppercase",letterSpacing:0.4,flexShrink:1},value:{color:colors.foreground,fontSize:18,fontWeight:"800",marginTop:8},highlightValue:{color:colors.primary},sub:{color:colors.mutedForeground,fontSize:12,marginTop:4}});

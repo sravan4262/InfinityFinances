@@ -1,17 +1,22 @@
 {
-  "name": "fire-calculator",
+  "name": "infinity-finances",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
     "ui",
-    "api"
+    "api",
+    "mobile"
   ],
   "scripts": {
     "dev:ui": "npm run dev --workspace=ui",
     "dev:api": "npm run dev --workspace=api",
+    "dev:mobile": "npm run start --workspace=mobile",
     "dev": "concurrently \"npm run dev:ui\" \"npm run dev:api\"",
     "build": "npm run build --workspace=api && npm run build --workspace=ui",
-    "db:migrate": "for f in supabase/migrations/*.sql; do psql $DATABASE_URL -f $f; done"
+    "db:migrate": "./scripts/migrate.sh",
+    "db:reset": "./scripts/migrate.sh --reset",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -33,6 +33,8 @@ const FIRE_NUMBER_UNLOCKED_STEP = 4;
 
 export function LivePreviewPanel({ step }: { step: number }) {
   const { inputs, spouseInputs, previewPerson, includeSpouse } = useFireStore();
+  const currency = inputs.currency ?? "USD";
+  const money = (value: number, compact = false) => formatCurrency(value, compact, currency);
 
   // For step-specific previews (1-3), use the active person's inputs
   const preview = (includeSpouse && previewPerson === "spouse") ? spouseInputs : inputs;
@@ -87,16 +89,16 @@ export function LivePreviewPanel({ step }: { step: number }) {
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.35 }}
-            className="glass rounded-2xl p-5 text-center glow-indigo"
+            className="glass rounded-2xl p-5 text-center glow-primary"
           >
             <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">
               Your FIRE Number
             </p>
             <p className="text-3xl font-bold text-primary tabular-nums">
-              {formatCurrency(fireNumber)}
+              {money(fireNumber)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              {formatCurrency(inputs.retirementSpending)} ÷{" "}
+              {money(inputs.retirementSpending)} ÷{" "}
               {(inputs.withdrawalRate * 100).toFixed(1)}% withdrawal rate
             </p>
           </motion.div>
@@ -189,14 +191,14 @@ export function LivePreviewPanel({ step }: { step: number }) {
                   icon={<TrendingUp className="w-3.5 h-3.5" />}
                   label="Savings Rate"
                   value={`${savingsRate.toFixed(0)}%`}
-                  sub={`${formatCurrency(annualSavings / 12, true)}/mo saved`}
+                  sub={`${money(annualSavings / 12, true)}/mo saved`}
                   accent={savingsRate >= 40 ? "success" : savingsRate >= 20 ? undefined : "warning"}
                 />
                 <StatTile
                   icon={<Briefcase className="w-3.5 h-3.5" />}
                   label="After-tax Income"
-                  value={formatCurrency(preview.afterTaxIncome, true)}
-                  sub={`${formatCurrency(preview.afterTaxIncome / 12, true)}/mo`}
+                  value={money(preview.afterTaxIncome, true)}
+                  sub={`${money(preview.afterTaxIncome / 12, true)}/mo`}
                 />
               </div>
               <div className="glass rounded-xl p-4">
@@ -204,16 +206,16 @@ export function LivePreviewPanel({ step }: { step: number }) {
                 <div className="space-y-2">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Spending</span>
-                    <span>{formatCurrency(preview.currentSpending, true)}/yr</span>
+                    <span>{money(preview.currentSpending, true)}/yr</span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">Base saved</span>
-                    <span className="text-success">{formatCurrency(baseAnnualSavings, true)}/yr</span>
+                    <span className="text-success">{money(baseAnnualSavings, true)}/yr</span>
                   </div>
                   {streamsAnnual > 0 && (
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">+ Streams</span>
-                      <span className="text-primary">{formatCurrency(streamsAnnual, true)}/yr</span>
+                      <span className="text-primary">{money(streamsAnnual, true)}/yr</span>
                     </div>
                   )}
                   <div className="h-2 bg-muted rounded-full overflow-hidden mt-1">
@@ -234,7 +236,7 @@ export function LivePreviewPanel({ step }: { step: number }) {
                 <StatTile
                   icon={<Target className="w-3.5 h-3.5" />}
                   label="Portfolio Now"
-                  value={formatCurrency(totalPortfolio, true)}
+                  value={money(totalPortfolio, true)}
                   sub="current balance"
                 />
                 <StatTile
@@ -248,14 +250,14 @@ export function LivePreviewPanel({ step }: { step: number }) {
               <div className="glass rounded-xl p-4">
                 <p className="text-xs text-muted-foreground mb-1">Projected at retirement</p>
                 <p className="text-xl font-bold text-foreground tabular-nums">
-                  {formatCurrency(projectedPortfolio, true)}
+                  {money(projectedPortfolio, true)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   In {yearsToRetirement} yrs at {(blendedReturn * 100).toFixed(1)}%
                 </p>
                 {totalMonthlyIn > 0 && (
                   <p className="text-xs text-primary mt-2 pt-2 border-t border-border">
-                    + {formatCurrency(totalMonthlyIn, true)}/mo in contributions
+                    + {money(totalMonthlyIn, true)}/mo in contributions
                   </p>
                 )}
               </div>
@@ -269,13 +271,13 @@ export function LivePreviewPanel({ step }: { step: number }) {
                 <StatTile
                   icon={<PiggyBank className="w-3.5 h-3.5" />}
                   label="Social Security"
-                  value={preview.socialSecurityBenefit ? formatCurrency(preview.socialSecurityBenefit * 12, true) + "/yr" : "Not set"}
+                  value={preview.socialSecurityBenefit ? money(preview.socialSecurityBenefit * 12, true) + "/yr" : "Not set"}
                   sub={preview.socialSecurityBenefit ? `from age ${preview.socialSecurityAge}` : "optional"}
                 />
                 <StatTile
                   icon={<Briefcase className="w-3.5 h-3.5" />}
                   label="Pension"
-                  value={preview.pensionBenefit ? formatCurrency(preview.pensionBenefit * 12, true) + "/yr" : "Not set"}
+                  value={preview.pensionBenefit ? money(preview.pensionBenefit * 12, true) + "/yr" : "Not set"}
                   sub={preview.pensionBenefit ? `from age ${preview.pensionStartAge}` : "optional"}
                 />
               </div>
@@ -301,13 +303,13 @@ export function LivePreviewPanel({ step }: { step: number }) {
                   icon={<TrendingUp className="w-3.5 h-3.5" />}
                   label="Savings Rate"
                   value={`${savingsRate.toFixed(0)}%`}
-                  sub={`${formatCurrency(annualSavings / 12, true)}/mo`}
+                  sub={`${money(annualSavings / 12, true)}/mo`}
                   accent={savingsRate >= 40 ? "success" : undefined}
                 />
                 <StatTile
                   icon={<PiggyBank className="w-3.5 h-3.5" />}
                   label="Needed / mo"
-                  value={formatCurrency(monthlySavingsNeeded, true)}
+                  value={money(monthlySavingsNeeded, true)}
                   sub="to retire on time"
                   accent={onTrack ? "success" : "warning"}
                 />
@@ -324,8 +326,8 @@ export function LivePreviewPanel({ step }: { step: number }) {
                   />
                 </div>
                 <div className="flex justify-between text-xs mt-2 text-muted-foreground tabular-nums">
-                  <span>{formatCurrency(totalPortfolio, true)}</span>
-                  <span>{formatCurrency(fireNumber, true)}</span>
+                  <span>{money(totalPortfolio, true)}</span>
+                  <span>{money(fireNumber, true)}</span>
                 </div>
               </div>
               <div className="glass rounded-xl p-4">
@@ -339,7 +341,7 @@ export function LivePreviewPanel({ step }: { step: number }) {
                     <div key={label} className="flex justify-between items-center">
                       <span className="text-xs text-muted-foreground">{label}</span>
                       <span className={`text-sm font-semibold tabular-nums ${cls}`}>
-                        {formatCurrency(fireNumber * mult, true)}
+                        {money(fireNumber * mult, true)}
                       </span>
                     </div>
                   ))}

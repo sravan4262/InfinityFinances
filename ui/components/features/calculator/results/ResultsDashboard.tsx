@@ -13,7 +13,7 @@ import { MonteCarloPanel } from "./MonteCarloPanel";
 import { FireCelebration } from "./FireCelebration";
 import { ShareButton } from "./ShareButton";
 import { SavePlanButton } from "@/components/features/plans/SavePlanButton";
-import { PlansDrawer } from "@/components/features/plans/PlansDrawer";
+import { useChatContextStore } from "@/lib/chatContextStore";
 import { runMonteCarlo } from "@/lib/engine/monteCarlo";
 import { HISTORICAL_SCENARIOS, runHistoricalSequence } from "@/lib/engine/historicalSequences";
 import { formatCurrency, formatPct } from "@/lib/utils";
@@ -28,6 +28,8 @@ type ResultView = "you" | "spouse" | "combined";
 
 export function ResultsDashboard() {
   const { results, inputs, editInputs, includeSpouse, spouseInputs, spouseResults, unifiedResults } = useFireStore();
+  const setChatContext = useChatContextStore((s) => s.setContext);
+  const clearChatContext = useChatContextStore((s) => s.clearContext);
   const [view, setView] = useState<ResultView>("you");
   const [whatIfResults, setWhatIfResults] = useState<FireResults | null>(null);
   const [mcEnabled, setMcEnabled] = useState(false);
@@ -59,6 +61,14 @@ export function ResultsDashboard() {
     setWhatIfResults(r);
   }, []);
 
+  useEffect(() => {
+    setChatContext("retirement", {
+      inputs: activeInputs as unknown as Record<string, unknown>,
+      results: (activeResults ?? undefined) as unknown as Record<string, unknown> | undefined,
+    });
+    return () => clearChatContext("retirement");
+  }, [activeInputs, activeResults, setChatContext, clearChatContext]);
+
   // Run MC when enabled
   useEffect(() => {
     if (!mcEnabled || !activeResults) {
@@ -81,6 +91,8 @@ export function ResultsDashboard() {
   if (!activeResults) return null;
 
   const realAnnualReturn = (1 + activeInputs.expectedReturn) / (1 + activeInputs.inflationRate) - 1;
+  const currency = activeInputs.currency ?? inputs.currency ?? "USD";
+  const money = (value: number, compact = false) => formatCurrency(value, compact, currency);
 
   const fireAgeDisplay = activeResults.fireAge ? `Age ${activeResults.fireAge}` : "Not reached";
   const yearsDisplay = activeResults.yearsToFire ? `${activeResults.yearsToFire} yrs` : "—";
@@ -89,7 +101,7 @@ export function ResultsDashboard() {
   const monthlyRetirementSalary =
     activeInputs.monthlyRetirementSalary ?? activeInputs.retirementSpending / 12;
   const pvLabel = activeResults.requiredCorpusPV > 0
-    ? formatCurrency(activeResults.requiredCorpusPV)
+    ? money(activeResults.requiredCorpusPV)
     : "—";
   const depletionDisplay = activeResults.depletionAge
     ? `Age ${activeResults.depletionAge}`
@@ -150,7 +162,6 @@ export function ResultsDashboard() {
           </button>
           <ShareButton results={activeResults} inputs={activeInputs} />
           <SavePlanButton inputs={activeInputs} />
-          <PlansDrawer />
           <button
             onClick={editInputs}
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border hover:border-primary/40 rounded-lg px-3 py-2.5 transition-colors"
@@ -165,7 +176,7 @@ export function ResultsDashboard() {
             {viewLabel}
           </p>
           <h1 className="text-4xl sm:text-5xl font-bold text-primary tabular-nums">
-            {formatCurrency(activeResults.fireNumber)}
+            {money(activeResults.fireNumber)}
           </h1>
           <p className="text-sm text-muted-foreground mt-2">
             Withdrawal-rate target · PV corpus{" "}
@@ -194,7 +205,7 @@ export function ResultsDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <StatCard
           label="FIRE number"
-          value={formatCurrency(activeResults.fireNumber)}
+          value={money(activeResults.fireNumber)}
           gold
           delay={0}
           icon={<Flame className="w-4 h-4" />}
@@ -228,7 +239,7 @@ export function ResultsDashboard() {
         <StatCard
           label="PV corpus needed"
           value={pvLabel}
-          subValue={`${formatCurrency(monthlyRetirementSalary)}/mo target`}
+          subValue={`${money(monthlyRetirementSalary)}/mo target`}
           delay={0.24}
           icon={<Shield className="w-4 h-4" />}
         />
@@ -254,7 +265,7 @@ export function ResultsDashboard() {
             <div className="text-sm">
               <p className="font-medium">
                 Today&apos;s{" "}
-                <span className="text-primary">{formatCurrency(monthlyRetirementSalary)}/mo</span>{" "}
+                <span className="text-primary">{money(monthlyRetirementSalary)}/mo</span>{" "}
                 target =
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -264,7 +275,7 @@ export function ResultsDashboard() {
           </div>
           <div className="text-right shrink-0">
             <p className="text-lg font-bold text-gold tabular-nums">
-              {formatCurrency(nominalMonthly)}/mo
+              {money(nominalMonthly)}/mo
             </p>
             <p className="text-xs text-muted-foreground">nominal</p>
           </div>
@@ -285,7 +296,7 @@ export function ResultsDashboard() {
             <p className="text-muted-foreground text-xs mt-0.5">
               {view === "spouse" ? "Spouse will be" : "You'll be"}{" "}
               <span className="text-foreground font-medium">
-                {formatCurrency(Math.abs(activeResults.gapAtTargetAge))}
+                {money(Math.abs(activeResults.gapAtTargetAge))}
               </span>{" "}
               short of the FIRE number at age {activeInputs.retirementAge}.{" "}
               {activeResults.fireAge
@@ -310,7 +321,7 @@ export function ResultsDashboard() {
               {view === "combined" ? "the household" : view === "spouse" ? "spouse" : "you"}{" "}
               will have{" "}
               <span className="text-foreground font-medium">
-                {formatCurrency(activeResults.gapAtTargetAge)}
+                {money(activeResults.gapAtTargetAge)}
               </span>{" "}
               more than the FIRE number. That&apos;s a{" "}
               {formatPct(activeResults.gapAtTargetAge / activeResults.fireNumber)} buffer.
@@ -330,10 +341,10 @@ export function ResultsDashboard() {
           <p className="font-medium text-primary mb-1">Withdrawal-rate vs PV corpus</p>
           <p className="text-muted-foreground text-xs">
             The 4% rule gives{" "}
-            <span className="text-foreground font-medium">{formatCurrency(activeResults.fireNumber)}</span>.
+            <span className="text-foreground font-medium">{money(activeResults.fireNumber)}</span>.
             The PV formula — funding{" "}
             <span className="text-foreground font-medium">
-              {formatCurrency(monthlyRetirementSalary)}/mo
+              {money(monthlyRetirementSalary)}/mo
             </span>{" "}
             for {activeInputs.lifeExpectancy - activeInputs.retirementAge} years — gives{" "}
             <span className="text-foreground font-medium">{pvLabel}</span>.
@@ -353,6 +364,7 @@ export function ResultsDashboard() {
         whatIfRows={whatIfResults?.yearlyRows}
         whatIfFireAge={whatIfResults?.fireAge}
         monteCarloRows={mcResults?.percentileRows}
+        currency={currency}
       />
 
       {/* What-if explorer */}
@@ -374,6 +386,7 @@ export function ResultsDashboard() {
             historicalResults={historicalResults}
             retirementAge={activeInputs.retirementAge}
             lifeExpectancy={activeInputs.lifeExpectancy}
+            currency={currency}
           />
         </motion.div>
       )}
@@ -382,6 +395,7 @@ export function ResultsDashboard() {
       <AccountSequencingPanel
         seq={activeResults.accountSequencing}
         retirementAge={activeInputs.retirementAge}
+        currency={currency}
       />
 
       {/* FIRE variants */}
@@ -390,6 +404,7 @@ export function ResultsDashboard() {
           results={activeResults}
           currentAge={activeInputs.currentAge}
           realAnnualReturn={realAnnualReturn}
+          currency={currency}
         />
       </div>
 
@@ -398,11 +413,12 @@ export function ResultsDashboard() {
         <SensitivityTable
           rows={activeResults.retirementSensitivity}
           plannedRetirementAge={activeInputs.retirementAge}
+          currency={currency}
         />
       )}
 
       {/* Year-by-year table */}
-      <YearlyTable rows={activeResults.yearlyRows} fireAge={activeResults.fireAge} />
+      <YearlyTable rows={activeResults.yearlyRows} fireAge={activeResults.fireAge} currency={currency} />
     </div>
   );
 }
