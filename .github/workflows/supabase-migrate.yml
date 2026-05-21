@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID:  ${{ secrets.SUPABASE_PROJECT_ID }}
+      RESEND_API_KEY:       ${{ secrets.RESEND_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -33,8 +33,8 @@ jobs:
       # Per-user feature flag seed runs after migrations against the
       # freshly-migrated schema. It uses psql variable substitution
       # (\set + :'var'), so we run it with psql rather than the supabase
-      # CLI. DATABASE_URL is the direct Postgres connection built from the
-      # same secrets the CLI already uses.
+      # CLI. DATABASE_URL should be the Supabase session-pooler connection
+      # string so GitHub Actions can connect over IPv4.
       #
       # `seed-feature-flag-global.sql` is intentionally NOT run here —
       # flipping the global toggle is a deliberate manual action, not
@@ -42,6 +42,5 @@ jobs:
       # the Supabase SQL editor (or via psql) when you want to roll out.
       - name: Seed per-user feature flags
         env:
-          DATABASE_URL: postgres://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@db.${{ secrets.SUPABASE_PROJECT_ID }}.supabase.co:5432/postgres
-          PGSSLMODE: require
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/scripts/seed-feature-flag-user.sql
